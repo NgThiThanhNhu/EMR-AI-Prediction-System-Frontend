@@ -1,11 +1,7 @@
-"use client";
-
 import { BrowserRouter as Router, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
-  LogIn,
-  ChevronRight,
   Zap,
   TrendingUp,
   Database,

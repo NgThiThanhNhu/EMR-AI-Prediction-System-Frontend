@@ -462,101 +462,7 @@ $accent-blue: #00b8d9;
     }
   }
 }
-
 // Features Section
-// .featuresSection {
-//   padding: 8rem 5%;
-//   max-width: 1440px;
-//   margin: 0 auto;
-
-//   .sectionHeader {
-//     text-align: center;
-//     margin-bottom: 5rem;
-//     .subTitle {
-//       font-weight: 800;
-//       font-size: 0.85rem;
-//       color: $primary;
-//       letter-spacing: 2px;
-//       margin-bottom: 1rem;
-//       display: block;
-//     }
-//     h2 {
-//       font-size: 3rem;
-//       font-weight: 800;
-//       color: $text-dark;
-//     }
-//   }
-
-//   .featuresGrid {
-//     display: grid;
-//     grid-template-columns: repeat(3, 1fr);
-//     gap: 3rem;
-//     @media (max-width: 1024px) {
-//       grid-template-columns: 1fr;
-//     }
-//   }
-
-//   .featureCard {
-//     padding: 3rem;
-//     background: white;
-//     border-radius: 2rem;
-//     border: 1px solid rgba($primary, 0.08);
-//     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-//     &:hover {
-//       transform: translateY(-12px);
-//       box-shadow: 0 32px 64px -12px rgba($primary, 0.15);
-//       border-color: $primary;
-//     }
-
-//     .featureIcon {
-//       width: 64px;
-//       height: 64px;
-//       background: $bg-light;
-//       border-radius: 16px;
-//       display: flex;
-//       align-items: center;
-//       justify-content: center;
-//       color: $primary;
-//       margin-bottom: 2rem;
-//       transition: all 0.3s;
-//     }
-
-//     &:hover .featureIcon {
-//       background: $primary;
-//       color: white;
-//       transform: scale(1.1);
-//     }
-
-//     h3 {
-//       font-size: 1.5rem;
-//       font-weight: 700;
-//       margin-bottom: 1.25rem;
-//       color: $text-dark;
-//     }
-//     p {
-//       color: $text-muted;
-//       line-height: 1.6;
-//       margin-bottom: 2rem;
-//     }
-
-//     .featureList {
-//       list-style: none;
-//       padding: 0;
-//       display: flex;
-//       flex-direction: column;
-//       gap: 0.75rem;
-//       li {
-//         display: flex;
-//         align-items: center;
-//         gap: 0.5rem;
-//         font-size: 0.95rem;
-//         font-weight: 600;
-//         color: $text-muted;
-//       }
-//     }
-//   }
-// }
 .featuresSection {
   padding: 8rem 5%;
   max-width: 1440px;
@@ -804,8 +710,6 @@ $accent-blue: #00b8d9;
   padding: 8rem 5% 4rem;
   background: white;
   border-top: 1px solid $bg-light;
-  // background: #0052cc;
-  // color: white;
   .footerGrid {
     max-width: 1440px;
     margin: 0 auto;
