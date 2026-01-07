@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
@@ -100,10 +100,7 @@ export default function HomePage() {
               <div className={styles.avatarGroup}>
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className={styles.avatar}>
-                    <img
-                      src={`/doctor-avatar-.jpg?height=40&width=40&query=doctor+avatar+${i}`}
-                      alt="User"
-                    />
+                    <img src={`../../../public/doctor${i}.jpg`} alt="User" />
                   </div>
                 ))}
               </div>
