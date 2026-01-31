@@ -1,8 +1,10 @@
 "use client"
 import { useState, useEffect } from "react"
 import styles from "./PatientHome.module.scss"
+import { useNavigate } from "react-router-dom";
 
 const PatientHome = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home")
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0)
   const [animatedMetrics, setAnimatedMetrics] = useState({
@@ -76,12 +78,12 @@ const PatientHome = () => {
   ]
 
   const quickActions = [
-    { id: 1, label: "Đặt Khám Mới", icon: "📅", color: "#0066CC" },
-    { id: 2, label: "Hồ Sơ Bệnh Nhân", icon: "👤", color: "#0052A3" },
+    { id: 1, label: "Đặt Khám Mới", icon: "📅", color: "#0066CC", action: () => navigate('/booking') },
+    { id: 2, label: "Hồ Sơ Bệnh Nhân", icon: "👤", color: "#0052A3", action: () => navigate('/patient-profile') },
     { id: 3, label: "Kết Quả Xét Nghiệm", icon: "🔬", color: "#003D7A" },
-    { id: 4, label: "Tài Liệu Y Tế", icon: "📄", color: "#002E5C" },
+    { id: 4, label: "Hồ sơ bệnh án", icon: "📄", color: "#002E5C", action: () => navigate('/medical-record') },
     { id: 5, label: "Lịch Sử Khám", icon: "📋", color: "#0066CC" },
-    { id: 6, label: "Liên Hệ Bác Sĩ", icon: "💬", color: "#0052A3" },
+    { id: 6, label: "Liên Hệ Bác Sĩ", icon: "💬", color: "#0052A3", },
   ]
 
   const newsItems = [
@@ -269,7 +271,7 @@ const PatientHome = () => {
         <h2>Chức Năng Chính</h2>
         <div className={styles.actionsGrid}>
           {quickActions.map((action) => (
-            <button key={action.id} className={styles.actionBtn} style={{ borderTopColor: action.color }}>
+            <button key={action.id} className={styles.actionBtn} style={{ borderTopColor: action.color }} onClick={action.action}>
               <span className={styles.actionIcon}>{action.icon}</span>
               <span className={styles.actionText}>{action.label}</span>
             </button>
