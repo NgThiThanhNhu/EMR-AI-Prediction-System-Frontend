@@ -26,6 +26,7 @@ const ERM = () => {
     })
 
     // --- 1. SỬA LẠI KHAI BÁO STATE (Thêm setPatientList) ---
+    // --- 1. SỬA LẠI KHAI BÁO STATE (SỬA DÒNG PID ĐỂ KHỚP DỮ LIỆU) ---
     const [patientList, setPatientList] = useState(() => {
         const provinces = [
             { name: "Thành phố Hà Nội", districts: ["Quận Cầu Giấy", "Huyện Chương Mỹ", "Quận Ba Đình"], wards: ["Phường Dịch Vọng", "Thị trấn Chúc Sơn", "Phường Kim Mã"] },
@@ -39,7 +40,10 @@ const ERM = () => {
             return {
                 id: i + 1,
                 name: `BỆNH NHÂN TEST ${String.fromCharCode(65 + i)}`,
-                pid: `11405${10 + i}`,
+
+                // --- SỬA DÒNG NÀY (Để mã bắt đầu từ 1140500 giống bảng hồ sơ) ---
+                pid: `1140${500 + i}`,
+
                 insuranceNumber: i % 3 === 0 ? "" : `DN479${10000 + i}`,
                 gender: i % 2 === 0 ? "Nam" : "Nữ",
                 dob: `${(i % 28) + 1}/0${(i % 9) + 1}/${1980 + (i % 20)}`,
@@ -47,9 +51,8 @@ const ERM = () => {
                 country: "Việt Nam",
                 province: selectedProv.name,
                 district: selectedProv.districts[distIndex],
-
                 ward: selectedProv.wards[distIndex],
-                isLocked: false // <--- THÊM TRƯỜNG NÀY: Mặc định là chưa khóa
+                isLocked: false
             };
         });
     });
@@ -65,6 +68,27 @@ const ERM = () => {
             );
         }
     };
+
+    // --- 3. STATE & LOGIC CHO MODAL SỬA NHÂN VIÊN (MỚI) ---
+    const [showEditEmpModal, setShowEditEmpModal] = useState(false);
+    const [editingEmp, setEditingEmp] = useState(null);
+
+    // Mở modal sửa
+    const handleOpenEditEmp = (emp) => {
+        setEditingEmp({ ...emp }); // Copy dữ liệu để sửa
+        setShowEditEmpModal(true);
+    };
+
+    // Lưu thay đổi
+    const handleSaveEmpChanges = () => {
+        setEmployeeList(prev => prev.map(item =>
+            item.stt === editingEmp.stt ? editingEmp : item
+        ));
+        alert("Cập nhật thông tin thành công!");
+        setShowEditEmpModal(false);
+    };
+
+
 
     // --- 2. STATE ---
     const [selectedRecord, setSelectedRecord] = useState(null); // NULL: Hiện bảng danh sách, CÓ DATA: Hiện chi tiết
@@ -82,6 +106,127 @@ const ERM = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [showAddModal, setShowAddModal] = useState(false)
+    const [settingsTab, setSettingsTab] = useState("Quản lý nhân viên");
+    const [empPage, setEmpPage] = useState(1);
+    const [empPerPage, setEmpPerPage] = useState(10);
+    const [empSearch, setEmpSearch] = useState("");
+    // --- 1. STATE & DATA QUẢN LÝ NHÂN VIÊN ---
+    const [employeeList, setEmployeeList] = useState([
+        { stt: 1, name: "Nguyễn Thị Lan", email: "lanxuka98@gmail.com", phone: "0377757709", gender: "Nữ", dob: "15/05/1998", role: "Y tá", dept: "Khoa Nhi", status: "Đang hoạt động" },
+        { stt: 2, name: "Trương Thị Anh", email: "anhht@athanoi.com", phone: "0964699399", gender: "Nữ", dob: "20/10/1995", role: "Điều dưỡng", dept: "Khoa Nội", status: "Đang hoạt động" },
+        { stt: 3, name: "Phạm Văn Hùng", email: "hungpv@namhoc.com", phone: "0362526763", gender: "Nam", dob: "12/12/1990", role: "Bác sĩ", dept: "Khoa Ngoại", status: "Đang hoạt động" },
+        { stt: 4, name: "Lê Thị Mai", email: "mailt@hospital.com", phone: "0362526761", gender: "Nữ", dob: "13/02/1992", role: "Kỹ thuật viên", dept: "Phòng X-Quang", status: "Đang hoạt động" },
+        { stt: 5, name: "Đoàn Thành Đồng", email: "dongdt@elsaga.net", phone: "0353022931", gender: "Nam", dob: "25/09/1994", role: "Nhân viên", dept: "Phòng Hành chính", status: "Đang hoạt động" },
+        { stt: 6, name: "TS.BS Nguyễn Văn Hùng", email: "bacsi@gmail.com", phone: "0378880598", gender: "Nam", dob: "26/06/1980", role: "Trưởng khoa", dept: "Khoa Sản", status: "Đang hoạt động" },
+        { stt: 7, name: "Phùng Hoàng Nam", email: "NV.0106123@gmail.com", phone: "0999999999", gender: "Nam", dob: "10/01/1983", role: "Kỹ thuật viên", dept: "Phòng Xét nghiệm", status: "Đang hoạt động" },
+        { stt: 8, name: "Nguyễn Xuân Giang", email: "NV.0038123@gmail.com", phone: "100000570", gender: "Nam", dob: "27/06/1986", role: "Kế toán", dept: "Phòng Tài chính", status: "Đang hoạt động" },
+        { stt: 9, name: "Trần Văn Cường", email: "cuongtv@gmail.com", phone: "0912345678", gender: "Nam", dob: "01/01/1985", role: "Bác sĩ", dept: "Khoa Cấp Cứu", status: "Đang hoạt động" },
+        { stt: 10, name: "Lý Thị Mận", email: "manlt@gmail.com", phone: "0987654321", gender: "Nữ", dob: "05/05/1993", role: "Y tá", dept: "Khoa Nhi", status: "Ngừng hoạt động" },
+        { stt: 11, name: "Hoàng Văn Thái", email: "thaihv@gmail.com", phone: "0905555888", gender: "Nam", dob: "11/11/1988", role: "Phó khoa", dept: "Khoa Nội", status: "Đang hoạt động" },
+        { stt: 12, name: "Ngô Thị Bích", email: "bichnt@gmail.com", phone: "0933444555", gender: "Nữ", dob: "09/09/1996", role: "Điều dưỡng", dept: "Khoa Hồi sức", status: "Đang hoạt động" },
+    ]);
+
+    // --- 2. THÊM STATE & LOGIC CHO MODAL THÊM NHÂN VIÊN MỚI ---
+    const [showAddEmpModal, setShowAddEmpModal] = useState(false);
+    const [searchUserId, setSearchUserId] = useState("");
+    const [foundUser, setFoundUser] = useState(null);
+    const [duplicateWarning, setDuplicateWarning] = useState(null); // <--- State mới để lưu cảnh báo trùng
+    const [newEmpDetails, setNewEmpDetails] = useState({ dept: "", role: "Bác sĩ" });
+
+    // DỮ LIỆU GIẢ LẬP USER 
+    const mockUserDatabase = [
+        { id: "USER01", name: "Trần Văn Bình", email: "binhtv@gmail.com", phone: "0911222333", gender: "Nam", dob: "1995-08-15" },
+        { id: "USER02", name: "Lê Thị Thu", email: "thule@yahoo.com", phone: "0988777666", gender: "Nữ", dob: "1998-11-20" },
+        // ... (giữ nguyên data của bạn)
+    ];
+
+    // --- HÀM TÌM KIẾM CÓ KIỂM TRA TRÙNG LẶP ---
+    const handleSearchUser = () => {
+        if (!searchUserId.trim()) { alert("Vui lòng nhập ID User!"); return; }
+
+        // 1. Tìm user trong database giả lập
+        const user = mockUserDatabase.find(u => u.id.toLowerCase() === searchUserId.toLowerCase());
+
+        if (user) {
+            setFoundUser(user);
+
+            // 2. KIỂM TRA TRÙNG: Xem email user này đã có trong danh sách nhân viên chưa
+            const isExist = employeeList.some(emp => emp.email === user.email);
+
+            if (isExist) {
+                // Nếu trùng -> Hiện cảnh báo
+                setDuplicateWarning(`Nhân viên "${user.name}" đã tồn tại trong danh sách!`);
+            } else {
+                // Nếu không trùng -> Reset cảnh báo, cho phép nhập liệu
+                setDuplicateWarning(null);
+                setNewEmpDetails({ dept: "Khoa Nội", role: "Bác sĩ" });
+            }
+
+        } else {
+            alert("Không tìm thấy User với ID này trong hệ thống!");
+            setFoundUser(null);
+            setDuplicateWarning(null);
+        }
+    };
+
+    // Hàm Lưu nhân viên mới
+    const handleAddEmployeeToSystem = () => {
+        if (!foundUser || duplicateWarning) return; // Chặn nếu trùng
+
+        const newEmp = {
+            stt: employeeList.length + 1,
+            name: foundUser.name,
+            email: foundUser.email,
+            phone: foundUser.phone,
+            gender: foundUser.gender,
+            dob: formatDob(foundUser.dob),
+            dept: newEmpDetails.dept,
+            role: newEmpDetails.role,
+            address: "--",
+            status: "Đang hoạt động"
+        };
+
+        setEmployeeList(prev => [newEmp, ...prev]);
+        alert(`Đã thêm nhân viên: ${newEmp.name}\nVai trò: ${newEmp.role}\nKhoa: ${newEmp.dept}`);
+
+        // Reset modal
+        setShowAddEmpModal(false);
+        setSearchUserId("");
+        setFoundUser(null);
+        setDuplicateWarning(null);
+    };
+
+    // Helper format ngày
+    const formatDob = (dateStr) => {
+        if (!dateStr) return "--";
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    // --- STATE & DATA CHO TAB "QUẢN LÝ NGƯỜI KÝ" (MỚI THÊM) ---
+    const [signerPage, setSignerPage] = useState(1);
+    const [signerPerPage, setSignerPerPage] = useState(10);
+    const [signerSearch, setSignerSearch] = useState("");
+    const [signerStatusFilter, setSignerStatusFilter] = useState("Tất cả");
+
+    const [manageSignerList, setManageSignerList] = useState([
+        { id: 23, name: "Bs Nguyễn Anh Tú", dept: "", status: "Đang hoạt động" },
+        { id: 24, name: "Bs Đào Văn Kiên", dept: "Khoa Nội", status: "Đang hoạt động" },
+        { id: 25, name: "Ths.Bs Phạm Thị Mỹ", dept: "Khoa Sản", status: "Đang hoạt động" },
+        { id: 26, name: "Ths.Bs Nguyễn Xuân Huyên", dept: "Khoa Nhi", status: "Đang hoạt động" },
+        { id: 27, name: "Bs CKII Bùi Quốc Công", dept: "Khoa Cấp Cứu", status: "Đang hoạt động" },
+        { id: 28, name: "Bs CKI Nguyễn Văn Chuyên", dept: "Khoa Hồi Sức", status: "Đang hoạt động" },
+        { id: 29, name: "Bs Nguyễn Thành Trung", dept: "Khoa Tim Mạch", status: "Đang hoạt động" },
+        { id: 30, name: "Ths.Bs. Đinh Hữu Việt", dept: "Khoa Nam Học", status: "Đang hoạt động" },
+        { id: 31, name: "Bs Phạm Văn Hưởng", dept: "Khoa Chẩn Đoán HA", status: "Đang hoạt động" },
+        { id: 32, name: "Ths.Bs Lê Thị Thu Hiền", dept: "Khoa Hỗ Trợ SS", status: "Đang hoạt động" },
+        { id: 33, name: "BS Hồ Hữu Phúc", dept: "Khoa Xét Nghiệm", status: "Đang hoạt động" },
+        { id: 34, name: "Bs CKI Nguyễn Liên Hiệp", dept: "Khoa Dược", status: "Đang hoạt động" },
+        { id: 35, name: "Bs CKI Hoàng Đức Trung", dept: "Khoa Khám Bệnh", status: "Đang hoạt động" },
+        { id: 36, name: "BS Nguyễn Trung Phương", dept: "", status: "Đang hoạt động" },
+        { id: 37, name: "Bs. Trần Thị Khánh Huyền", dept: "", status: "Đang hoạt động" },
+        { id: 38, name: "Bs Thiệu Đình Trọng", dept: "", status: "Đang hoạt động" },
+    ]);
     // --- STATE CHO MODAL KÝ SỐ ---
     const [showSignModal, setShowSignModal] = useState(false);
     const [signTab, setSignTab] = useState("Danh sách ký phiếu"); // Tab trong Modal: "Danh sách ký phiếu" hoặc "Danh sách nhân viên"
@@ -99,6 +244,61 @@ const ERM = () => {
         "Bs Thiệu Đình Trọng", "Đoàn Thành Đồng", "Ths.Bs. Đinh Hữu Việt",
         "Nguyễn Văn An (System)", "Bs Trịnh Văn Tam"
     ];
+
+    // --- STATE CHO MODAL LỰA CHỌN NGƯỜI KÝ (MỚI) ---
+    const [showSelectSignerModal, setShowSelectSignerModal] = useState(false);
+    const [tempSelectedIds, setTempSelectedIds] = useState([]); // Lưu các ID đang tick chọn trong modal
+    const [sourceSearch, setSourceSearch] = useState(""); // Tìm kiếm trong modal
+
+    // Dữ liệu giả lập: Tất cả nhân viên trong bệnh viện (Nguồn để chọn)
+    const [allStaffSource] = useState([
+        { id: 101, name: "TS.BS Nguyễn Văn A", dept: "Khoa Ngoại", role: "Trưởng khoa" },
+        { id: 102, name: "ThS.BS Lê Thị B", dept: "Khoa Nội", role: "Bác sĩ" },
+        { id: 103, name: "BS.CKII Trần Văn C", dept: "Khoa Sản", role: "Phó khoa" },
+        { id: 104, name: "BS.CKI Phạm Thị D", dept: "Khoa Nhi", role: "Bác sĩ" },
+        { id: 105, name: "BS Hồ Hữu Phúc", dept: "Khoa Xét Nghiệm", role: "Bác sĩ" },
+        { id: 106, name: "KTV Lê Văn F", dept: "Chẩn đoán hình ảnh", role: "Kỹ thuật viên" },
+        { id: 107, name: "BS Ngô Văn G", dept: "Khoa Cấp Cứu", role: "Bác sĩ" },
+        { id: 108, name: "Điều dưỡng H", dept: "Khoa Hồi Sức", role: "Điều dưỡng trưởng" },
+    ]);
+
+    // --- LOGIC CHO MODAL LỰA CHỌN NGƯỜI KÝ ---
+
+    // 1. Hàm mở modal và reset state tạm
+    const handleOpenSelectSigner = () => {
+        setTempSelectedIds([]); // Reset các ô đã tick
+        setSourceSearch(""); // Reset ô tìm kiếm
+        setShowSelectSignerModal(true);
+    };
+
+    // 2. Hàm tick/untick checkbox
+    const handleToggleCandidate = (id) => {
+        setTempSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    // 3. Hàm Lưu: Chuyển từ danh sách nguồn sang danh sách quản lý
+    const handleSaveSelectedSigners = () => {
+        // Lọc ra các object nhân viên dựa trên ID đã chọn
+        const selectedStaffs = allStaffSource.filter(s => tempSelectedIds.includes(s.id));
+
+        // Map sang format của bảng manageSignerList (id, name, dept, status)
+        const newSigners = selectedStaffs.map(s => ({
+            id: s.id,
+            name: s.name,
+            dept: s.dept,
+            status: "Đang hoạt động" // Mặc định là active
+        }));
+
+        // Cập nhật vào state chính (Chị nhớ sửa dòng khai báo manageSignerList có thêm setManageSignerList nhé)
+        // setManageSignerList(prev => [...prev, ...newSigners]); 
+
+        // Tạm thời alert để demo logic
+        alert(`Đã thêm ${newSigners.length} người vào danh sách ký!`);
+
+        setShowSelectSignerModal(false);
+    };
 
     // Hàm lọc danh sách bác sĩ theo từ khóa nhập vào
     const filteredDoctors = doctorList.filter(doc =>
@@ -179,11 +379,11 @@ const ERM = () => {
     // Dữ liệu giả lập cho bảng "Danh sách ký phiếu" (Hình 1)
     // --- STATE DỮ LIỆU KÝ PHIẾU (Chuyển thành State để có thể sửa đổi) ---
     const [signDocuments, setSignDocuments] = useState([
-        { stt: 1, name: "PHIẾU KIỂM TRA BỆNH ÁN (SẢN PHỤ KHOA)", count: "1/1", signedBy: "Nguyễn Văn An (System)", progress: "Ký 1: Nguyễn Văn An (System)", status: "Đã ký", statusColor: "green" },
-        { stt: 2, name: "BỆNH ÁN SẢN PHỤ KHOA", count: "0/2", signedBy: "", progress: "Ký 1: Đoàn Thành Đồng\nKý 2: Bs Trịnh Văn Tam", status: "Chưa ký", statusColor: "red" },
-        { stt: 3, name: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 2)", count: "0/1", signedBy: "", progress: "Ký 1: Nguyễn Văn An (System)", status: "Chưa ký", statusColor: "red" },
-        { stt: 4, name: "PHIẾU KHAI THÁC TIỀN SỬ 2", count: "0/1", signedBy: "", progress: "Ký 1: Nguyễn Văn An (System)", status: "Chưa ký", statusColor: "red" },
-        { stt: 5, name: "TÓM TẮT THÔNG QUA PHẪU THUẬT...", count: "0/2", signedBy: "", progress: "Ký 1: Nguyễn Văn An (System)\nKý 2: ...", status: "Chưa ký", statusColor: "red" },
+        { stt: 1, name: "PHIẾU ĐIỆN TÂM ĐỒ-1", count: "1/1", signedBy: "Nguyễn Văn An (System)", progress: "Ký 1: Nguyễn Văn An (System)", status: "Đã ký", statusColor: "green" },
+        { stt: 2, name: "PHIẾU ĐIỆN TÂM ĐỒ-2", count: "0/2", signedBy: "", progress: "Ký 1: Đoàn Thành Đồng\nKý 2: Bs Trịnh Văn Tam", status: "Chưa ký", statusColor: "red" },
+        { stt: 3, name: "PHIẾU ĐIỆN TÂM ĐỒ-3", count: "0/1", signedBy: "", progress: "Ký 1: Nguyễn Văn An (System)", status: "Chưa ký", statusColor: "red" },
+        { stt: 4, name: "PHIẾU ĐIỆN TÂM ĐỒ-4", count: "0/1", signedBy: "", progress: "Ký 1: Nguyễn Văn An (System)", status: "Chưa ký", statusColor: "red" },
+
     ]);
 
     // --- 1. DỮ LIỆU GIẢ LẬP CHO TRANG "KÝ SỐ" (HÌNH 2) ---
@@ -198,16 +398,91 @@ const ERM = () => {
         { id: 8, stt: 13, name: "LƯƠNG THỊ THI", fileNo: "1/1", docName: "XÉT NGHIỆM 10-06-2024-0", createdDate: "04/09/2024", type: "BỆNH ÁN SẢN PHỤ KHOA", signCount: "2/2", signer: "Bs Nguyễn Trọng Hoàng Hiệp", signTime: "13:55 04/09/2024", status: "Đã ký" },
     ]);
 
-    // --- STATE PHÂN TRANG CHO KÝ SỐ (MỚI) ---
-    const [currentSignPage, setCurrentSignPage] = useState(1);
-    const [signPerPage, setSignPerPage] = useState(10); // Mặc định 10 dòng/trang
 
-    // Logic tính toán cắt dữ liệu cho Ký số (để chỉ hiện 10 dòng)
+
+    // --- 2. LOGIC LỌC & TÌM KIẾM CHO KÝ SỐ (CHÈN VÀO ĐÂY) ---
+
+    // A. State lưu giá trị bộ lọc
+    const [signFilters, setSignFilters] = useState({
+        type: "Tất cả",
+        signer: "Tất cả",
+        date: "Tất cả",
+        search: ""
+    });
+
+    // B. Tự động lấy danh sách không trùng lặp cho Dropdown
+    const uniqueSignTypes = useMemo(() => ["Tất cả", ...new Set(digitalSignList.map(item => item.type))].sort(), [digitalSignList]);
+    const uniqueSigners = useMemo(() => ["Tất cả", ...new Set(digitalSignList.map(item => item.signer).filter(Boolean))].sort(), [digitalSignList]);
+    const uniqueSignDates = useMemo(() => ["Tất cả", ...new Set(digitalSignList.map(item => item.createdDate))].sort(), [digitalSignList]);
+
+    // C. Hàm xử lý thay đổi bộ lọc
+    const handleSignFilterChange = (field, value) => {
+        setSignFilters(prev => ({ ...prev, [field]: value }));
+        setCurrentSignPage(1); // Quan trọng: Reset về trang 1 khi lọc
+    };
+
+    // D. Logic Lọc dữ liệu (Core)
+    const filteredSignList = useMemo(() => {
+        return digitalSignList.filter(record => {
+            if (signFilters.type !== "Tất cả" && record.type !== signFilters.type) return false;
+            if (signFilters.signer !== "Tất cả" && record.signer !== signFilters.signer) return false;
+            if (signFilters.date !== "Tất cả" && record.createdDate !== signFilters.date) return false;
+            if (signFilters.search) {
+                const s = signFilters.search.toLowerCase();
+                return (
+                    record.name.toLowerCase().includes(s) ||
+                    record.docName.toLowerCase().includes(s) ||
+                    record.fileNo.toLowerCase().includes(s)
+                );
+            }
+            return true;
+        });
+    }, [digitalSignList, signFilters]);
+
+    // E. Logic Phân trang (Dựa trên danh sách ĐÃ LỌC)
+    const [currentSignPage, setCurrentSignPage] = useState(1);
+    const [signPerPage, setSignPerPage] = useState(10);
+
     const indexOfLastSign = currentSignPage * signPerPage;
     const indexOfFirstSign = indexOfLastSign - signPerPage;
-    const currentSignList = digitalSignList.slice(indexOfFirstSign, indexOfLastSign);
-    const totalSignPages = Math.ceil(digitalSignList.length / signPerPage);
+    // Cắt từ danh sách đã lọc (filteredSignList) thay vì danh sách gốc
+    const currentSignList = filteredSignList.slice(indexOfFirstSign, indexOfLastSign);
+    const totalSignPages = Math.ceil(filteredSignList.length / signPerPage);
+    // --- 4. DATA & LOGIC CHO TAB "PHIẾU TRÌNH KÝ" ---
 
+    // A. Dữ liệu giả lập (Theo Hình 2)
+    const [submissionRecords] = useState([
+        { id: 1, stt: 1, type: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 2)", submitter: "Nguyễn Văn An (System)", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+        { id: 2, stt: 2, type: "PHIẾU KHÁM TIỀN MÊ ( SẢN PHỤ KHOA )", submitter: "Nguyễn Văn An (System)", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+        { id: 3, stt: 3, type: "PHIẾU KHAI THÁC TIỀN SỬ 2", submitter: "Nguyễn Văn An (System)", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+        { id: 4, stt: 4, type: "TÓM TẮT THÔNG QUA PHẪU THUẬT - THỦ THUẬT", submitter: "Nguyễn Văn An (System)", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+        { id: 5, stt: 5, type: "BẢNG KIỂM AN TOÀN PHẪU THUẬT", submitter: "Nguyễn Văn An (System)", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+        // ... thêm dữ liệu nếu cần để test phân trang
+    ]);
+
+    // B. State chọn checkbox (để thực hiện Ký lô)
+    const [selectedSubmissions, setSelectedSubmissions] = useState([]);
+
+    // C. Logic Phân trang cho Phiếu trình ký
+    const [subPage, setSubPage] = useState(1);
+    const [subPerPage, setSubPerPage] = useState(10);
+
+    const indexOfLastSub = subPage * subPerPage;
+    const indexOfFirstSub = indexOfLastSub - subPerPage;
+    const currentSubmissions = submissionRecords.slice(indexOfFirstSub, indexOfLastSub);
+    const totalSubPages = Math.ceil(submissionRecords.length / subPerPage);
+
+    // Hàm xử lý checkbox
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedSubmissions(currentSubmissions.map(i => i.id));
+        else setSelectedSubmissions([]);
+    };
+
+    const handleSelectRow = (id) => {
+        setSelectedSubmissions(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
 
     // --- STATE QUẢN LÝ NHÂN VIÊN KÝ SỐ ---
     // 1. Chuyển danh sách nhân viên thành State
@@ -250,11 +525,23 @@ const ERM = () => {
         setNewStaffName(""); // Reset ô nhập
     };
 
-    const handleRemoveStaff = (index) => {
-        if (window.confirm("Bạn chắc chắn muốn xóa nhân viên này khỏi danh sách ký?")) {
-            const newList = [...signStaffs];
-            newList.splice(index, 1);
-            setSignStaffs(newList);
+    // --- SỬA HÀM XÓA: Xóa theo ID từ danh sách manageSignerList ---
+    // --- SỬA HÀM XÓA: Chỉ cho phép xóa nếu trạng thái là "Ngừng hoạt động" ---
+    const handleRemoveStaff = (id) => {
+        // 1. Tìm thông tin nhân viên trong danh sách hiện tại
+        const staffToRemove = manageSignerList.find(s => s.id === id);
+
+        if (!staffToRemove) return;
+
+        // 2. Kiểm tra trạng thái
+        if (staffToRemove.status === "Đang hoạt động") {
+            alert(`Không thể xóa "${staffToRemove.name}" vì đang ở trạng thái 'Đang hoạt động'.\n\nVui lòng chuyển trạng thái sang 'Ngừng hoạt động' trước khi xóa!`);
+            return; // Dừng lại, không xóa
+        }
+
+        // 3. Nếu hợp lệ (Ngừng hoạt động) thì mới hiện confirm xóa
+        if (window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn "${staffToRemove.name}" khỏi danh sách ký không?`)) {
+            setManageSignerList(prevList => prevList.filter(staff => staff.id !== id));
         }
     };
     const [addStep, setAddStep] = useState(1)
@@ -294,6 +581,31 @@ const ERM = () => {
     const currentPatients = filteredPatients.slice(indexOfFirstPatient, indexOfLastPatient)
     const totalPatientPages = Math.ceil(filteredPatients.length / patientsPerPage)
 
+    // --- THÊM VÀO PHẦN KHAI BÁO STATE (ĐẦU FILE) ---
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [editingStatusRecord, setEditingStatusRecord] = useState(null);
+    const [tempStatus, setTempStatus] = useState("");
+
+    // Hàm mở modal sửa trạng thái
+    const handleOpenStatusEdit = (record) => {
+        setEditingStatusRecord(record);
+        setTempStatus(record.status);
+        setShowStatusModal(true);
+    };
+
+    // Hàm lưu trạng thái mới
+    const handleSaveStatusChange = () => {
+        if (!editingStatusRecord) return;
+
+        // Cập nhật vào danh sách dữ liệu gốc
+        setAllRecords(prev => prev.map(item =>
+            item.id === editingStatusRecord.id ? { ...item, status: tempStatus } : item
+        ));
+
+        alert(`Đã cập nhật trạng thái hồ sơ ${editingStatusRecord.name} thành: ${tempStatus}`);
+        setShowStatusModal(false);
+    };
+
     const filteredRecords = useMemo(() => {
         return allRecords.filter(record => {
             if (activeTab !== "Tất cả" && record.type !== activeTab) return false
@@ -328,6 +640,9 @@ const ERM = () => {
     // --- 4. HANDLERS ---
     const handlePageChange = (pageNumber) => setCurrentPage(pageNumber)
 
+    // --- STATE CHO POPUP XEM GIẤY (PREVIEW) ---
+    const [previewRecord, setPreviewRecord] = useState(null); // Lưu thông tin phiếu đang xem
+
     const getPaginationGroup = (curr, total) => {
         if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
         const pages = [1]
@@ -349,20 +664,53 @@ const ERM = () => {
         setFormErrors(prev => ({ ...prev, [name]: "" }))
     }
 
+    // --- 1. LOGIC VALIDATE (KIỂM TRA DỮ LIỆU) ---
+    // --- HÀM XỬ LÝ CHUYỂN BƯỚC (VALIDATE CHUẨN) ---
     const handleNextStep = () => {
-        let errors = {}
-        let isValid = true
-        if (!formInput.patientCode.trim()) { errors.patientCode = "Vui lòng nhập mã bệnh nhân"; isValid = false }
-        else { const isExist = allRecords.some(r => r.pid === formInput.patientCode.trim()); if (!isExist) { errors.patientCode = "Mã bệnh nhân không tồn tại!"; isValid = false } }
+        let errors = {};
+        let isValid = true;
         const currentYear = new Date().getFullYear();
-        const inputYear = parseInt(formInput.year, 10);
-        if (!formInput.year.trim()) { errors.year = "Vui lòng nhập năm"; isValid = false; }
-        else if (!/^\d{4}$/.test(formInput.year)) { errors.year = "Năm không hợp lệ"; isValid = false; }
-        else if (inputYear < currentYear) { errors.year = `Năm hồ sơ phải từ ${currentYear} trở đi (tạo mới)`; isValid = false; }
-        if (!selectedTypeCode) { alert("Vui lòng chọn loại hồ sơ!"); isValid = false }
-        setFormErrors(errors); if (isValid) setAddStep(2)
-    }
 
+        // 1. Kiểm tra Mã bệnh nhân
+        if (!formInput.patientCode.trim()) {
+            errors.patientCode = "Vui lòng nhập mã bệnh nhân";
+            isValid = false;
+        } else {
+            // Chuyển cả 2 về String để so sánh (tránh lỗi số vs chữ)
+            const inputPid = String(formInput.patientCode).trim();
+            const isPatientExist = patientList.some(p => String(p.pid) === inputPid);
+
+            if (!isPatientExist) {
+                // Gợi ý mã đúng đầu tiên để anh test
+                errors.patientCode = `Mã BN không tồn tại! (Thử mã: ${patientList[0].pid})`;
+                isValid = false;
+            }
+        }
+
+        // 2. Kiểm tra Năm hồ sơ (>= Năm hiện tại)
+        if (!formInput.year.trim()) {
+            errors.year = "Vui lòng nhập năm";
+            isValid = false;
+        } else {
+            const inputYear = parseInt(formInput.year, 10);
+            if (isNaN(inputYear) || inputYear < currentYear) {
+                errors.year = `Năm hồ sơ phải từ ${currentYear} trở về sau!`;
+                isValid = false;
+            }
+        }
+
+        // 3. Kiểm tra Loại bệnh án
+        if (!selectedTypeCode) {
+            alert("Vui lòng chọn 1 loại hồ sơ bệnh án!");
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+
+        if (isValid) {
+            setAddStep(2);
+        }
+    };
     const handleBack = () => setAddStep(1)
     const handleCloseModal = () => {
         setShowAddModal(false); setAddStep(1); setSelectedTypeCode(null);
@@ -414,6 +762,30 @@ const ERM = () => {
         alert(`Đã cập nhật thông tin bệnh nhân: ${editingPatient.name}`);
         setShowEditModal(false);
         setEditingPatient(null);
+    };
+
+    // --- (MỚI) STATE & LOGIC CHO MODAL SỬA TRẠNG THÁI NGƯỜI KÝ ---
+    const [showEditSignerModal, setShowEditSignerModal] = useState(false);
+    const [editingSigner, setEditingSigner] = useState(null);
+
+    // Hàm mở modal và lấy thông tin người cần sửa
+    const handleOpenEditSigner = (signer) => {
+        setEditingSigner({ ...signer }); // Copy object để không sửa trực tiếp vào state gốc
+        setShowEditSignerModal(true);
+    };
+
+    // Hàm lưu trạng thái mới
+    const handleSaveSignerStatus = () => {
+        if (!editingSigner) return;
+
+        // Cập nhật vào danh sách manageSignerList
+        setManageSignerList(prev => prev.map(s =>
+            s.id === editingSigner.id ? { ...s, status: editingSigner.status } : s
+        ));
+
+        alert(`Đã cập nhật trạng thái cho: ${editingSigner.name}`);
+        setShowEditSignerModal(false);
+        setEditingSigner(null);
     };
 
     // --- STATE CHO MODAL TẠO MỚI BỆNH NHÂN ---
@@ -536,7 +908,14 @@ const ERM = () => {
         }
     };
 
+    // --- XỬ LÝ CHUYỂN TRANG (LOGIC MỚI: CHẶN TRẠNG THÁI LƯU KHO) ---
     const handleRecordClick = (record) => {
+        // Kiểm tra nếu trạng thái là "Lưu kho" thì không cho vào
+        if (record.status === "Lưu kho") {
+            alert("Hồ sơ này đang lưu kho, không thể xem chi tiết!");
+            return;
+        }
+
         setSelectedRecord(record);
         setActiveMenuId(1); // Reset về trang bìa khi chọn bệnh nhân mới
         setExpandedIds([]); // Thu gọn sidebar
@@ -555,6 +934,308 @@ const ERM = () => {
         setSelectedRecord(null);
     }
 
+    // --- 1. HÀM VẼ GIẤY DÙNG CHUNG (Dán trên renderDetailView) ---
+    // --- 1. HÀM VẼ GIẤY (ĐÃ THÊM NGƯỜI KÝ BÊN TRÁI CHO CÂN ĐỐI) ---
+    const renderCommonECG = (data) => {
+        // Dữ liệu giả lập
+        const vitalSigns = {
+            bp: "110/70",
+            pulse: "95",
+            temp: "38.5",
+            spo2: "98",
+            weight: "52",
+            height: "160"
+        };
+
+        const labResults = [
+            { id: 1, name: "Tiểu cầu (PLT)", result: "90", unit: "G/L", ref: "150 - 450", eval: "Thấp", highlight: true },
+            { id: 2, name: "Bạch cầu (WBC)", result: "3.5", unit: "G/L", ref: "4.0 - 10.0", eval: "Thấp", highlight: true },
+            { id: 3, name: "Hematocrit (HCT)", result: "45", unit: "%", ref: "37 - 42", eval: "Cao", highlight: true },
+            { id: 4, name: "Hồng cầu (RBC)", result: "4.5", unit: "T/L", ref: "3.8 - 5.3", eval: "Bình thường", highlight: false },
+        ];
+
+        return (
+            <div className={`${styles.paper} ${styles.ecgPaper}`} style={{
+                width: '210mm', minHeight: '297mm', margin: 0, transform: 'scale(0.85)', transformOrigin: 'top center',
+                boxShadow: '0 0 15px rgba(0,0,0,0.15)', background: 'white', padding: '40px 50px',
+                fontFamily: '"Times New Roman", Times, serif', color: '#000', textAlign: 'left'
+            }}>
+
+                {/* --- HEADER --- */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '11pt', textTransform: 'uppercase', fontWeight: 'bold' }}>SỞ Y TẾ TP. HỒ CHÍ MINH</div>
+                        <div style={{ fontSize: '11pt', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '5px' }}>BỆNH VIỆN ĐẠI HỌC Y DƯỢC</div>
+                        <div style={{ fontSize: '10pt' }}>Khoa: Khám bệnh</div>
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '10pt' }}>Mã BN: <b>{data.pid}</b></div>
+                        <div style={{ fontSize: '10pt' }}>Số hồ sơ: {data.fileNo}</div>
+                    </div>
+                </div>
+
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <h1 style={{ fontSize: '18pt', fontWeight: 'bold', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
+                        PHIẾU KẾT QUẢ XÉT NGHIỆM
+                    </h1>
+                    <div style={{ fontSize: '11pt', fontStyle: 'italic' }}>(Ngày khám: 15/01/2024)</div>
+                </div>
+
+                {/* --- PHẦN 1: THÔNG TIN HÀNH CHÍNH --- */}
+                <div style={{ marginBottom: '25px' }}>
+                    <table style={{ width: '100%', fontSize: '12pt', borderCollapse: 'collapse' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '160px', paddingBottom: '8px', verticalAlign: 'top' }}>Họ tên người bệnh:</td>
+                                <td style={{ paddingBottom: '8px', fontWeight: 'bold', textTransform: 'uppercase' }}>{data.name}</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>Tuổi:</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>{data.age}</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>Giới:</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>{data.gender}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ paddingBottom: '8px', verticalAlign: 'top' }}>Địa chỉ:</td>
+                                <td colSpan="5" style={{ paddingBottom: '8px' }}>{data.address}</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* --- PHẦN 2: CHỈ SỐ SINH HIỆU --- */}
+                <div style={{ marginBottom: '25px' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '15px', textTransform: 'uppercase', textAlign: 'left' }}>I. CHỈ SỐ SINH HIỆU:</h3>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px 30px', fontSize: '12pt', textAlign: 'left' }}>
+                        <div>Mạch: <b>{vitalSigns.pulse}</b> lần/phút</div>
+                        <div>Nhiệt độ: <b style={{ color: '#dc3545' }}>{vitalSigns.temp}</b> °C</div>
+                        <div>Huyết áp: <b>{vitalSigns.bp}</b> mmHg</div>
+                        <div>Nhịp thở/SpO2: <b>{vitalSigns.spo2}</b> %</div>
+                        <div>Cân nặng: <b>{vitalSigns.weight}</b> kg</div>
+                        <div>Chiều cao: <b>{vitalSigns.height}</b> cm</div>
+                    </div>
+                </div>
+
+                {/* --- PHẦN 3: CHẨN ĐOÁN --- */}
+                <div style={{ marginBottom: '25px', textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '10px', textTransform: 'uppercase' }}>II. CHẨN ĐOÁN:</h3>
+                    <div style={{ fontSize: '12pt', paddingLeft: '15px' }}>
+                        <p style={{ margin: '5px 0' }}>• {data.diagnosis || "J00 - Viêm mũi họng cấp"}</p>
+                        <p style={{ margin: '5px 0' }}>• A97 - Sốt xuất huyết Dengue</p>
+                    </div>
+                </div>
+
+                {/* --- PHẦN 4: KẾT QUẢ XÉT NGHIỆM --- */}
+                <div style={{ marginBottom: '30px' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '10px', textTransform: 'uppercase', textAlign: 'left' }}>III. KẾT QUẢ CẬN LÂM SÀNG:</h3>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11pt' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '2px solid #000', borderTop: '2px solid #000' }}>
+                                <th style={{ padding: '8px', textAlign: 'left', width: '50px' }}>STT</th>
+                                <th style={{ padding: '8px', textAlign: 'left' }}>Tên chỉ số</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Kết quả</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Đơn vị</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>CS Tham chiếu</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Đánh giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {labResults.map((item, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #ddd' }}>
+                                    <td style={{ padding: '8px', textAlign: 'left' }}>{idx + 1}</td>
+                                    <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>{item.name}</td>
+                                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: item.highlight ? 'bold' : 'normal', color: item.highlight ? '#d32f2f' : 'inherit' }}>
+                                        {item.result}
+                                    </td>
+                                    <td style={{ padding: '8px', textAlign: 'center' }}>{item.unit}</td>
+                                    <td style={{ padding: '8px', textAlign: 'center' }}>{item.ref}</td>
+                                    <td style={{ padding: '8px', textAlign: 'center' }}>
+                                        {item.highlight ? (
+                                            <span style={{ border: '1px solid #d32f2f', color: '#d32f2f', padding: '1px 5px', fontSize: '10pt', borderRadius: '3px' }}>
+                                                {item.eval}
+                                            </span>
+                                        ) : (
+                                            <span>-</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* --- PHẦN 5: CHÂN TRANG & KÝ SỐ (2 BÊN) --- */}
+                <div style={{ flex: 1 }}></div>
+
+                <div className={styles.ecgFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '40px' }}>
+
+                    {/* KHỐI BÊN TRÁI: KỸ THUẬT VIÊN */}
+                    <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
+                        {/* Placeholder cho ngày tháng để 2 bên cân nhau */}
+                        <div style={{ height: '24px', marginBottom: '5px' }}></div>
+
+                        <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12pt', marginBottom: '60px' }}>
+                            KỸ THUẬT VIÊN
+                        </div>
+
+                        {/* Nút ký số bên trái */}
+                        <div>
+                            <button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>Ký số 🖊️</button>
+                        </div>
+
+                        <div style={{ marginTop: '10px', fontWeight: 'bold', fontSize: '12pt' }}>
+                            KTV Nguyễn Văn B
+                        </div>
+                    </div>
+
+                    {/* KHỐI BÊN PHẢI: BÁC SĨ (GIỮ NGUYÊN) */}
+                    <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
+                        <div className={styles.dateText} style={{ fontStyle: 'italic', marginBottom: '5px', fontSize: '12pt' }}>
+                            Hà Nội, Ngày 03 tháng 02 năm 2026
+                        </div>
+
+                        <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12pt', marginBottom: '60px' }}>
+                            BÁC SĨ ĐIỀU TRỊ
+                        </div>
+
+                        {(data.status === "Đã ký" || data.status === "Hoàn thành") ? (
+                            <div style={{ color: '#0052cc', border: '2px solid #0052cc', padding: '5px 15px', borderRadius: '4px', fontWeight: 'bold', display: 'inline-block', transform: 'rotate(-5deg)' }}>
+                                Đã ký bởi:<br /> {data.signer || "BS Nguyễn Văn A"}
+                            </div>
+                        ) : (
+                            <div>
+                                <button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>Ký số 🖊️</button>
+                            </div>
+                        )}
+                        <div style={{ marginTop: '10px', fontWeight: 'bold', fontSize: '12pt' }}>
+                            {data.signer || "BS Nguyễn Văn A"}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- HÀM VẼ PHIẾU KHÁM LÂM SÀNG (MỚI) ---
+    const renderClinicalExam = (data) => {
+        // Dữ liệu sinh hiệu giả lập (Giữ nguyên)
+        const vitalSigns = { bp: "110/70", pulse: "95", temp: "38.5", spo2: "98", weight: "52", height: "160" };
+
+        return (
+            <div className={`${styles.paper} ${styles.ecgPaper}`} style={{
+                width: '210mm', minHeight: '297mm', margin: 0, transform: 'scale(0.85)', transformOrigin: 'top center',
+                boxShadow: '0 0 15px rgba(0,0,0,0.15)', background: 'white', padding: '40px 50px',
+                fontFamily: '"Times New Roman", Times, serif', color: '#000', textAlign: 'left'
+            }}>
+                {/* HEADER (Giữ nguyên) */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '11pt', textTransform: 'uppercase', fontWeight: 'bold' }}>SỞ Y TẾ TP. HỒ CHÍ MINH</div>
+                        <div style={{ fontSize: '11pt', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '5px' }}>BỆNH VIỆN ĐẠI HỌC Y DƯỢC</div>
+                        <div style={{ fontSize: '10pt' }}>Khoa: Khám bệnh</div>
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '10pt' }}>Mã BN: <b>{data.pid}</b></div>
+                        <div style={{ fontSize: '10pt' }}>Số hồ sơ: {data.fileNo}</div>
+                    </div>
+                </div>
+
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <h1 style={{ fontSize: '18pt', fontWeight: 'bold', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
+                        PHIẾU KHÁM BỆNH
+                    </h1>
+                    <div style={{ fontSize: '11pt', fontStyle: 'italic' }}>(Ngày khám: {data.createdDate})</div>
+                </div>
+
+                {/* THÔNG TIN HÀNH CHÍNH (Giữ nguyên) */}
+                <div style={{ marginBottom: '25px' }}>
+                    <table style={{ width: '100%', fontSize: '12pt', borderCollapse: 'collapse' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '160px', paddingBottom: '8px', verticalAlign: 'top' }}>Họ tên người bệnh:</td>
+                                <td style={{ paddingBottom: '8px', fontWeight: 'bold', textTransform: 'uppercase' }}>{data.name}</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>Tuổi:</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>{data.age}</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>Giới:</td>
+                                <td style={{ width: '60px', paddingBottom: '8px' }}>{data.gender}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ paddingBottom: '8px', verticalAlign: 'top' }}>Địa chỉ:</td>
+                                <td colSpan="5" style={{ paddingBottom: '8px' }}>{data.address || "Số 15, Đường 3/2, Q.10, TP.HCM"}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* I. CHỈ SỐ SINH HIỆU (Giữ nguyên) */}
+                <div style={{ marginBottom: '25px' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '15px', textTransform: 'uppercase', textAlign: 'left' }}>I. CHỈ SỐ SINH HIỆU:</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px 30px', fontSize: '12pt', textAlign: 'left' }}>
+                        <div>Mạch: <b>{vitalSigns.pulse}</b> lần/phút</div>
+                        <div>Nhiệt độ: <b style={{ color: '#dc3545' }}>{vitalSigns.temp}</b> °C</div>
+                        <div>Huyết áp: <b>{vitalSigns.bp}</b> mmHg</div>
+                        <div>Nhịp thở/SpO2: <b>{vitalSigns.spo2}</b> %</div>
+                        <div>Cân nặng: <b>{vitalSigns.weight}</b> kg</div>
+                        <div>Chiều cao: <b>{vitalSigns.height}</b> cm</div>
+                    </div>
+                </div>
+
+                {/* II. CHẨN ĐOÁN (Giữ nguyên) */}
+                <div style={{ marginBottom: '25px', textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '10px', textTransform: 'uppercase' }}>II. CHẨN ĐOÁN:</h3>
+                    <div style={{ fontSize: '12pt', paddingLeft: '15px' }}>
+                        <p style={{ margin: '5px 0' }}>• {data.diagnosis || "J00 - Viêm mũi họng cấp"}</p>
+                    </div>
+                </div>
+
+                {/* --- PHẦN THAY ĐỔI: Thay bảng III bằng Text --- */}
+
+                {/* III. CÁC TRIỆU CHỨNG GHI NHẬN */}
+                <div style={{ marginBottom: '25px', textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '10px', textTransform: 'uppercase' }}>III. CÁC TRIỆU CHỨNG GHI NHẬN:</h3>
+                    <div style={{ fontSize: '12pt', padding: '10px', border: '1px dashed #ccc', minHeight: '80px', background: '#fafafa', lineHeight: '1.5' }}>
+                        - Bệnh nhân khai đau đầu âm ỉ vùng trán 2 ngày nay.<br />
+                        - Có kèm theo sốt nhẹ về chiều.<br />
+                        - Ăn uống kém, buồn nôn nhưng không nôn.<br />
+                        - Không ho, không khó thở.
+                    </div>
+                </div>
+
+                {/* IV. KHÁM LÂM SÀNG */}
+                <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+                    <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '10px', textTransform: 'uppercase' }}>IV. KHÁM LÂM SÀNG:</h3>
+                    <div style={{ fontSize: '12pt', padding: '10px', border: '1px dashed #ccc', minHeight: '120px', background: '#fafafa', lineHeight: '1.5' }}>
+                        <b>1. Toàn thân:</b> Tỉnh táo, tiếp xúc tốt. Da niêm mạc hồng.<br />
+                        <b>2. Tim mạch:</b> T1, T2 đều rõ, không nghe tiếng tim bệnh lý.<br />
+                        <b>3. Hô hấp:</b> Lồng ngực cân đối, rì rào phế nang êm dịu, không rale.<br />
+                        <b>4. Tiêu hóa:</b> Bụng mềm, không chướng, gan lách không sờ thấy.<br />
+                        <b>5. Các cơ quan khác:</b> Chưa phát hiện bất thường.
+                    </div>
+                </div>
+                {/* ----------------------------------------------- */}
+
+                {/* FOOTER KÝ SỐ (Giữ nguyên) */}
+                <div style={{ flex: 1 }}></div>
+                <div className={styles.ecgFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '40px' }}>
+                    {/* KHỐI TRÁI */}
+                    <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
+                        <div style={{ height: '24px', marginBottom: '5px' }}></div>
+                        <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12pt', marginBottom: '60px' }}>KỸ THUẬT VIÊN</div>
+                        <div><button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>Ký số 🖊️</button></div>
+                        <div style={{ marginTop: '10px', fontWeight: 'bold', fontSize: '12pt' }}>KTV Nguyễn Văn B</div>
+                    </div>
+                    {/* KHỐI PHẢI */}
+                    <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
+                        <div className={styles.dateText} style={{ fontStyle: 'italic', marginBottom: '5px', fontSize: '12pt' }}>Hà Nội, Ngày 03 tháng 02 năm 2026</div>
+                        <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12pt', marginBottom: '60px' }}>BÁC SĨ ĐIỀU TRỊ</div>
+                        <div><button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>Ký số 🖊️</button></div>
+                        <div style={{ marginTop: '10px', fontWeight: 'bold', fontSize: '12pt' }}>{data.signer || "BS Nguyễn Văn A"}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
     // --- HÀM RENDER CHI TIẾT (CHUẨN FORM) ---
     const renderDetailView = () => {
         if (!selectedRecord) return null;
@@ -574,15 +1255,23 @@ const ERM = () => {
             { id: 3, title: selectedRecord.type },
             { id: 4, title: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 1)" },
             { id: 5, title: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 2)" },
-            { id: 6, title: "XÉT NGHIỆM (2)", hasArrow: true },
-            { id: 7, title: "PHỤ KHOA - TẾ BÀO ÂM ĐẠO (1)", hasArrow: true },
+            { id: 6, title: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 3)", hasArrow: true },
+            // --- SỬA ĐOẠN NÀY: Thêm 3 phiếu con vào mục KHÁM LÂM SÀNG ---
+            {
+                id: 7, title: "KHÁM LÂM SÀN(3)", hasArrow: true,
+                children: [
+                    { id: 71, title: "Phiếu khám lâm sàng 1" },
+                    { id: 72, title: "Phiếu khám lâm sàng 2" },
+                    { id: 73, title: "Phiếu khám lâm sàng 3" }
+                ]
+            },
             // MỤC ĐIỆN TIM -> Có con là Điện tâm đồ-1
             {
-                id: 8, title: "ĐIỆN TIM (4)", hasArrow: true, children: [ // Đổi số lượng thành 4
-                    { id: 81, title: "Điện tâm đồ-1" },
-                    { id: 82, title: "Điện tâm đồ-2" }, // Thêm mới
-                    { id: 83, title: "Điện tâm đồ-3" }, // Thêm mới
-                    { id: 84, title: "Điện tâm đồ-4" }  // Thêm mới
+                id: 8, title: "XÉT NGHIỆM(4)", hasArrow: true, children: [ // Đổi số lượng thành 4
+                    { id: 81, title: "Xét nghiệm huyết học – Công thức máu-1" },
+                    { id: 82, title: "Xét nghiệm huyết học – Công thức máu-2" }, // Thêm mới
+                    { id: 83, title: "Xét nghiệm huyết học – Công thức máu-3" }, // Thêm mới
+                    { id: 84, title: "Xét nghiệm huyết học – Công thức máu-4" }  // Thêm mới
                 ]
             },
             { id: 9, title: "MONITOR SẢN KHOA (1)", hasArrow: true },
@@ -666,143 +1355,7 @@ const ERM = () => {
         // --- VIEW 2: PHIẾU ĐIỆN TÂM ĐỒ (ĐÃ CHỈNH SỬA THEO HÌNH 2) ---
         const renderECGForm = () => (
             <div className={styles.paperContainer}>
-                {/* Sử dụng class ecgPaper mới định nghĩa */}
-                <div className={`${styles.paper} ${styles.ecgPaper}`}>
-
-                    {/* 1. HEADER: Tiêu đề + Mã số */}
-                    <div className={styles.ecgHeader}>
-                        <h2>PHIẾU ĐIỆN TÂM ĐỒ</h2>
-                        <div className={styles.ecgIdBox}>Mã số: 1108657</div>
-                    </div>
-
-                    {/* 2. THÔNG TIN HÀNH CHÍNH (Layout giống Hình 2) */}
-                    <div className={styles.ecgInfo}>
-                        {/* Dòng 1: Họ tên - Ngày sinh - Giới tính */}
-                        <div className={`${styles.ecgRow} ${styles.spaced}`}>
-                            <div>
-                                <span className={styles.label}>Họ tên người bệnh:</span>
-                                <span className={`${styles.value} ${styles.upper}`}>{data.name}</span>
-                            </div>
-                            <div>
-                                <span className={styles.label}>Ngày sinh:</span>
-                                <span className={styles.value}>{data.dob} ({data.age} tuổi)</span>
-                            </div>
-                            <div>
-                                <span className={styles.label}>Giới tính:</span>
-                                <span className={styles.value}>{data.gender}</span>
-                            </div>
-                        </div>
-
-                        {/* Dòng 2: Địa chỉ */}
-                        <div className={styles.ecgRow}>
-                            <span className={styles.label}>Địa chỉ:</span>
-                            <span className={styles.value}>Số 15, Đường 3/2, Q.10, TP.HCM</span>
-                        </div>
-
-                        {/* Dòng 3: Chẩn đoán */}
-                        <div className={styles.ecgRow}>
-                            <span className={styles.label}>Chẩn đoán:</span>
-                            <span className={styles.value}>N21 CKK</span>
-                        </div>
-
-                        {/* Dòng 4: Ghi chú (để trống như hình mẫu) */}
-                        <div className={styles.ecgRow}>
-                            <span className={styles.label}>Ghi chú:</span>
-                            <span className={styles.value}></span>
-                        </div>
-
-                        {/* Dòng 5: Sinh hiệu (Mạch, Nhiệt, HA) */}
-                        <div className={styles.vitalsRow}>
-                            <div>
-                                <span className={styles.label}>Mạch:</span>
-                                <span className={styles.value}>100</span> lần/phút
-                            </div>
-                            <div>
-                                <span className={styles.label}>Nhiệt độ:</span>
-                                <span className={styles.value}>37</span> <sup>o</sup>C
-                            </div>
-                            <div>
-                                <span className={styles.label}>Huyết áp:</span>
-                                <span className={styles.value}>103/71</span> mmHg
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 3. KẾT QUẢ CẬN LÂM SÀNG */}
-                    <div className={styles.ecgResultSection}>
-                        <div className={styles.sectionTitle}>Yêu cầu cận lâm sàng:</div>
-
-                        {/* Grid chia 2 cột như Hình 2 */}
-                        <div className={styles.resultGrid}>
-                            {/* Cột Trái */}
-                            <div className={styles.leftCol}>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>Nhịp:</span> <span className={styles.gridValue}>Xoang</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>Trục:</span> <span className={styles.gridValue}>Trung gian</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>P:</span> <span className={styles.gridValue}>0.08 s</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>QRS:</span> <span className={styles.gridValue}>0.08 s</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>ST:</span> <span className={styles.gridValue}>Đẳng điện</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>QT:</span> <span className={styles.gridValue}>0.36 s</span></div>
-                            </div>
-
-                            {/* Cột Phải */}
-                            <div className={styles.rightCol}>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>Tần số:</span> <span className={styles.gridValue}>86 ck/p</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>Góc alpha:</span> <span className={styles.gridValue}>60 độ</span></div>
-                                <div className={styles.gridItem}><span className={styles.gridLabel}>PQ:</span> <span className={styles.gridValue}>0.14 s</span></div>
-                                {/* Các dòng trống để cân đối layout nếu cần */}
-                                <div className={styles.gridItem}></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 4. KẾT LUẬN */}
-                    <div className={styles.ecgConclusion}>
-                        <span className={styles.conclLabel}>KẾT LUẬN:</span>
-                        <div className={styles.conclContent}>HIỆN TẠI ĐIỆN TÂM ĐỒ BÌNH THƯỜNG</div>
-                    </div>
-
-                    {/* 5. CHỮ KÝ SỐ */}
-                    {/* 5. CHỮ KÝ SỐ (Đã căn chỉnh ngang hàng) */}
-                    <div className={styles.ecgFooter} style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-
-                        {/* --- KHỐI BÊN TRÁI --- */}
-                        <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
-                            {/* QUAN TRỌNG: Thêm div rỗng này để chiếm chỗ, giúp dòng BÁC SĨ ĐIỀU TRỊ bị đẩy xuống ngang với bên phải */}
-                            <div style={{ height: '24px', marginBottom: '5px' }}></div>
-
-                            <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '14px' }}>
-                                BÁC SĨ ĐIỀU TRỊ
-                            </div>
-
-                            {/* Nút Ký số (1) */}
-                            <div style={{ marginTop: '60px' }}> {/* Khoảng cách xuống nút ký */}
-                                <button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>
-                                    Ký số (1) 🖋️
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* --- KHỐI BÊN PHẢI --- */}
-                        <div className={styles.signBlock} style={{ textAlign: 'center', minWidth: '250px' }}>
-                            {/* Dòng Ngày tháng */}
-                            <div className={styles.dateText} style={{ fontStyle: 'italic', marginBottom: '5px', height: '24px' }}>
-                                Hà Nội, Ngày 01 tháng 02 năm 2026
-                            </div>
-
-                            <div className={styles.roleTitle} style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '14px' }}>
-                                PHỤ TRÁCH PHÒNG ĐIỆN TIM
-                            </div>
-
-                            {/* Nút Ký số (2) - Ngang hàng với (1) */}
-                            <div style={{ marginTop: '60px' }}>
-                                <button className={styles.signBtn} style={{ fontSize: '11px', padding: '4px 8px' }}>
-                                    Ký số (2) 🖋️
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+                {renderCommonECG(data)}
             </div>
         );
 
@@ -843,11 +1396,11 @@ const ERM = () => {
                                                     fontWeight: activeMenuId === child.id ? 'bold' : 'normal',
                                                     backgroundColor: activeMenuId === child.id ? '#e6f0ff' : 'transparent',
 
-                                                    display: 'flex',          // Dùng flex
+                                                    display: 'flex',          // Dùng flex
                                                     justifyContent: 'flex-start', // Căn bắt đầu từ trái
-                                                    alignItems: 'center',     // Căn giữa theo chiều dọc
-                                                    width: '100%',            // Chiếm hết chiều rộng
-                                                    textAlign: 'left'         // Text căn trái
+                                                    alignItems: 'center',     // Căn giữa theo chiều dọc
+                                                    width: '100%',            // Chiếm hết chiều rộng
+                                                    textAlign: 'left'         // Text căn trái
                                                 }}
                                                 onClick={() => setActiveMenuId(child.id)}
                                             >
@@ -873,8 +1426,17 @@ const ERM = () => {
                     </div>
 
                     <div className={styles.paperContainer}>
-                        {/* SWITCH GIỮA BÌA VÀ ĐIỆN TIM DỰA TRÊN ID */}
-                        {[81, 82, 83, 84].includes(activeMenuId) ? renderECGForm() : renderCoverPaper()}
+                        {/* SWITCH GIỮA CÁC LOẠI PHIẾU */}
+                        {(() => {
+                            // Nhóm phiếu Khám lâm sàng (71, 72, 73)
+                            if ([71, 72, 73].includes(activeMenuId)) return renderClinicalExam(data);
+
+                            // Nhóm phiếu Điện tim / Xét nghiệm (81, 82, 83, 84)
+                            if ([81, 82, 83, 84].includes(activeMenuId)) return renderECGForm();
+
+                            // Mặc định: Bìa hồ sơ
+                            return renderCoverPaper();
+                        })()}
                     </div>
                 </div>
             </div>
@@ -940,25 +1502,65 @@ const ERM = () => {
                                     </div>
                                 </div>
                                 {/* ... Table Bệnh nhân (Code cũ) ... */}
+                                {/* 2. BẢNG DANH SÁCH BỆNH NHÂN (ĐÃ CĂN TRÁI) */}
                                 <div className={styles.tableContainer}>
                                     <table className={styles.dataTable}>
-                                        {/* Header & Body Bệnh nhân giữ nguyên */}
-                                        <thead><tr><th className={styles.textCenter} style={{ width: '50px' }}>STT</th><th>Họ và tên</th><th>Mã BN</th><th>Mã BHYT</th><th className={styles.textCenter}>Giới tính</th><th className={styles.textCenter}>Ngày sinh</th><th>SĐT</th><th>Tỉnh/TP</th><th>Phường/Xã</th><th className={styles.textCenter}>Tác vụ</th></tr></thead>
+                                        <thead>
+                                            <tr>
+                                                <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
+
+                                                {/* Căn trái Header Họ tên */}
+                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Họ và tên</th>
+
+                                                <th style={{ textAlign: 'left' }}>Mã BN</th>
+                                                <th style={{ textAlign: 'left' }}>Mã BHYT</th>
+                                                <th className={styles.textCenter}>Giới tính</th>
+                                                <th className={styles.textCenter}>Ngày sinh</th>
+                                                <th style={{ textAlign: 'left' }}>SĐT</th>
+
+                                                {/* Căn trái Tỉnh/TP & Phường/Xã */}
+                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Tỉnh/TP</th>
+                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Phường/Xã</th>
+
+                                                <th className={styles.textCenter}>Tác vụ</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
                                             {currentPatients.map((p, index) => (
                                                 <tr key={p.id} className={p.isLocked ? styles.lockedRow : ''}>
                                                     <td className={styles.textCenter}>{indexOfFirstPatient + index + 1}</td>
-                                                    <td className={styles.blueText} style={{ fontWeight: '600' }}>{p.name}</td>
-                                                    <td>{p.pid}</td>
-                                                    <td style={{ color: p.insuranceNumber ? '#28a745' : '#999', fontWeight: p.insuranceNumber ? '600' : 'normal' }}>{p.insuranceNumber || "---"}</td>
+
+                                                    {/* Căn trái Body Họ tên */}
+                                                    <td className={styles.blueText} style={{ fontWeight: '600', textAlign: 'left', paddingLeft: '10px' }}>{p.name}</td>
+
+                                                    <td style={{ textAlign: 'left' }}>{p.pid}</td>
+
+                                                    <td style={{
+                                                        color: p.insuranceNumber ? '#28a745' : '#999',
+                                                        fontWeight: p.insuranceNumber ? '600' : 'normal',
+                                                        textAlign: 'left'
+                                                    }}>
+                                                        {p.insuranceNumber || "---"}
+                                                    </td>
+
                                                     <td className={styles.textCenter}>{p.gender}</td>
                                                     <td className={styles.textCenter}>{p.dob}</td>
-                                                    <td>{p.phone}</td>
-                                                    <td>{p.province}</td>
-                                                    <td>{p.ward}</td>
+                                                    <td style={{ textAlign: 'left' }}>{p.phone}</td>
+
+                                                    {/* Căn trái Body Tỉnh/TP & Phường/Xã */}
+                                                    <td style={{ textAlign: 'left', paddingLeft: '10px' }}>{p.province}</td>
+                                                    <td style={{ textAlign: 'left', paddingLeft: '10px' }}>{p.ward}</td>
+
                                                     <td className={styles.textCenter}>
                                                         <div className={styles.actionButtons}>
-                                                            {!p.isLocked ? (<><button className={styles.editBtn} onClick={() => handleOpenEditModal(p)}>✏️</button><button className={styles.lockBtn} onClick={() => handleToggleLock(p.id, true)}>🔒</button></>) : (<button className={styles.restoreBtn} onClick={() => handleToggleLock(p.id, false)}>♻️</button>)}
+                                                            {!p.isLocked ? (
+                                                                <>
+                                                                    <button className={styles.editBtn} onClick={() => handleOpenEditModal(p)}>✏️</button>
+                                                                    <button className={styles.lockBtn} onClick={() => handleToggleLock(p.id, true)}>🔒</button>
+                                                                </>
+                                                            ) : (
+                                                                <button className={styles.restoreBtn} onClick={() => handleToggleLock(p.id, false)}>♻️</button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1019,206 +1621,747 @@ const ERM = () => {
                             </>
 
                         ) : currentNav === "Ký số" ? (
-                            // --- B. GIAO DIỆN KÝ SỐ (ĐÃ SỬA HEADER GIỐNG HỒ SƠ BỆNH ÁN) ---
                             <>
+                                {/* --- KHỐI XỬ LÝ DỮ LIỆU CỤC BỘ CHO TAB "ĐÃ KÝ" & "CHƯA KÝ" --- */}
+                                {(() => {
+                                    // 1. DATA GIẢ LẬP "PHIẾU TRÌNH KÝ" (CHƯA KÝ) - Sửa lại submitter thành tên Bác sĩ để hiện trong Dropdown
+                                    // (Lưu ý: submissionRecords gốc ở trên state đang là "System", ở đây em tạo đè biến cục bộ để demo dropdown bác sĩ)
+                                    const localSubmissionRecords = [
+                                        { id: 1, stt: 1, type: "A-BỆNH ÁN SẢN PHỤ KHOA (TỜ 2)", submitter: "Bs Nguyễn Văn A", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+                                        { id: 2, stt: 2, type: "PHIẾU KHÁM TIỀN MÊ ( SẢN PHỤ KHOA )", submitter: "Ths Bs Lê Thị B", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+                                        { id: 3, stt: 3, type: "PHIẾU KHAI THÁC TIỀN SỬ 2", submitter: "Bs CKI Trần Văn C", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+                                        { id: 4, stt: 4, type: "TÓM TẮT THÔNG QUA PHẪU THUẬT - THỦ THUẬT", submitter: "Bs Nguyễn Văn A", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+                                        { id: 5, stt: 5, type: "BẢNG KIỂM AN TOÀN PHẪU THUẬT", submitter: "Bs Phạm Thị D", submitTime: "11/09/2024", signTime: "", status: "Chưa ký" },
+                                    ];
+
+                                    // 2. DATA GIẢ LẬP "PHIẾU TRÌNH KÝ ĐÃ KÝ" (Người gửi là Bác sĩ)
+                                    const signedSubmissionRecords = [
+                                        { id: 901, stt: 1, type: "BỆNH ÁN NỘI KHOA", submitter: "Bs Nguyễn Văn A", submitTime: "01/02/2026", signTime: "01/02/2026", status: "Đã ký" },
+                                        { id: 902, stt: 2, type: "PHIẾU HỘI CHẨN", submitter: "Ths Bs Lê Thị B", submitTime: "01/02/2026", signTime: "02/02/2026", status: "Đã ký" },
+                                        { id: 903, stt: 3, type: "GIẤY RA VIỆN", submitter: "Bs CKI Trần Văn C", submitTime: "02/02/2026", signTime: "02/02/2026", status: "Đã ký" },
+                                        { id: 904, stt: 4, type: "ĐƠN THUỐC", submitter: "Bs Nguyễn Văn A", submitTime: "03/02/2026", signTime: "03/02/2026", status: "Đã ký" },
+                                        { id: 905, stt: 5, type: "BỆNH ÁN NHI KHOA", submitter: "Bs Phạm Thị D", submitTime: "03/02/2026", signTime: "03/02/2026", status: "Đã ký" },
+                                        { id: 906, stt: 6, type: "PHIẾU XÉT NGHIỆM", submitter: "KTV Hoàng Văn E", submitTime: "04/02/2026", signTime: "04/02/2026", status: "Đã ký" },
+                                    ];
+
+                                    // 3. Lấy danh sách Bác sĩ để nạp vào Dropdown
+                                    const submitterListUnsigned = ["Tất cả", ...new Set(localSubmissionRecords.map(r => r.submitter))].sort();
+                                    const submitterListSigned = ["Tất cả", ...new Set(signedSubmissionRecords.map(r => r.submitter))].sort();
+
+                                    // 4. Logic Lọc
+                                    // Lọc tab "Đã ký"
+                                    const filteredSigned = signedSubmissionRecords.filter(item => {
+                                        if (signFilters.signer !== "Tất cả" && item.submitter !== signFilters.signer) return false;
+                                        if (signFilters.search) {
+                                            const s = signFilters.search.toLowerCase();
+                                            return item.type.toLowerCase().includes(s) || item.submitter.toLowerCase().includes(s);
+                                        }
+                                        return true;
+                                    });
+
+                                    // Lọc tab "Chưa ký"
+                                    const filteredUnsigned = localSubmissionRecords.filter(item => {
+                                        if (signFilters.signer !== "Tất cả" && item.submitter !== signFilters.signer) return false;
+                                        if (signFilters.search) {
+                                            const s = signFilters.search.toLowerCase();
+                                            return item.type.toLowerCase().includes(s) || item.submitter.toLowerCase().includes(s);
+                                        }
+                                        return true;
+                                    })
+
+                                    // 5. Phân trang
+                                    const totalSignedPages = Math.ceil(filteredSigned.length / signPerPage);
+                                    const lastIndexSigned = currentSignPage * signPerPage;
+                                    const firstIndexSigned = lastIndexSigned - signPerPage;
+                                    const currentSignedPageData = filteredSigned.slice(firstIndexSigned, lastIndexSigned);
+
+                                    const totalSubPagesFiltered = Math.ceil(filteredUnsigned.length / subPerPage);
+                                    const lastIndexSub = subPage * subPerPage;
+                                    const firstIndexSub = lastIndexSub - subPerPage;
+                                    const currentSubmissionsPageData = filteredUnsigned.slice(firstIndexSub, lastIndexSub);
+
+                                    return (
+                                        <>
+                                            <div className={styles.controlPanel}>
+                                                {/* 1. TABS */}
+                                                <div className={styles.tabsRow}>
+                                                    {["Tất cả", "Phiếu trình ký", "Phiếu trình ký đã ký"].map(tab => (
+                                                        <button
+                                                            key={tab}
+                                                            className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
+                                                            onClick={() => {
+                                                                setActiveTab(tab);
+                                                                setCurrentSignPage(1);
+                                                                setSubPage(1);
+                                                                handleSignFilterChange('signer', 'Tất cả');
+                                                            }}
+                                                        >
+                                                            {tab}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                <div className={styles.filterRow}>
+                                                    {/* --- LOGIC HIỂN THỊ BỘ LỌC --- */}
+
+                                                    {(activeTab === "Phiếu trình ký" || activeTab === "Phiếu trình ký đã ký") ? (
+                                                        <div className={styles.filterGroup}>
+                                                            {/* YÊU CẦU: Label là "Người gửi" */}
+                                                            <label>Người gửi</label>
+                                                            <select
+                                                                value={signFilters.signer}
+                                                                onChange={(e) => handleSignFilterChange('signer', e.target.value)}
+                                                            >
+                                                                {/* YÊU CẦU: Dropdown là tên Bác sĩ */}
+                                                                {(activeTab === "Phiếu trình ký" ? submitterListUnsigned : submitterListSigned).map(s => (
+                                                                    <option key={s} value={s}>{s}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    ) : (
+                                                        // TAB TẤT CẢ (Giữ nguyên)
+                                                        <>
+                                                            <div className={styles.filterGroup}><label>Loại hồ sơ</label><select><option>Tất cả</option></select></div>
+                                                            <div className={styles.filterGroup}><label>Người ký</label><select><option>Tất cả</option></select></div>
+                                                            <div className={styles.filterGroup}><label>Ngày tạo</label><select><option>Tất cả</option></select></div>
+                                                        </>
+                                                    )}
+
+                                                    <div className={styles.spacer}></div>
+
+                                                    {/* Nút Ký lô: CHỈ HIỆN Ở "PHIẾU TRÌNH KÝ" (CHƯA KÝ) */}
+                                                    {activeTab === "Phiếu trình ký" && (
+                                                        <button className={styles.addBtn} style={{ marginRight: '10px' }} onClick={() => alert(`Ký lô cho ${selectedSubmissions.length} phiếu!`)}>
+                                                            <span>✍️</span> Ký lô ({selectedSubmissions.length})
+                                                        </button>
+                                                    )}
+
+                                                    <div className={styles.actionGroup}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Tìm kiếm..."
+                                                            className={styles.searchInput}
+                                                            value={signFilters.search}
+                                                            onChange={(e) => handleSignFilterChange('search', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* --- BẢNG KÝ SỐ (ĐÃ SỬA HIỂN THỊ DANH SÁCH NGƯỜI KÝ Ở TAB TẤT CẢ) --- */}
+                                            <div className={styles.tableContainer} style={{ marginTop: '15px' }}>
+                                                <table className={styles.dataTable}>
+                                                    <thead>
+                                                        <tr>
+                                                            {/* Checkbox chỉ hiện ở Phiếu trình ký */}
+                                                            {activeTab === "Phiếu trình ký" && (
+                                                                <th className={styles.textCenter} style={{ width: '40px' }}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        onChange={handleSelectAll}
+                                                                        checked={currentSubmissionsPageData.length > 0 && selectedSubmissions.length === currentSubmissionsPageData.length}
+                                                                    />
+                                                                </th>
+                                                            )}
+
+                                                            <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
+
+                                                            {activeTab === "Tất cả" && <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Họ tên BN</th>}
+
+                                                            <th style={{ textAlign: 'left', paddingLeft: '15px' }}>
+                                                                {activeTab === "Tất cả" ? "Tên phiếu" : "Tên phiếu"}
+                                                            </th>
+
+
+                                                            {activeTab === "Tất cả" && <th style={{ textAlign: 'left', paddingLeft: '15px' }}>Loại hồ sơ</th>}
+                                                            {activeTab === "Tất cả" && <th className={styles.textCenter}>Số chữ ký</th>}
+
+                                                            <th style={{ textAlign: 'left', paddingLeft: '10px' }}>
+                                                                {activeTab === "Tất cả" ? "Người ký" : "Người trình ký"}
+                                                            </th>
+
+                                                            <th className={styles.textCenter}>
+                                                                {activeTab === "Tất cả" ? "Thời gian ký" : "Thời gian trình ký"}
+                                                            </th>
+
+                                                            {activeTab !== "Tất cả" && <th className={styles.textCenter}>Thời gian ký</th>}
+
+                                                            <th className={styles.textCenter}>Trạng thái</th>
+                                                            <th className={styles.textCenter}>
+                                                                {activeTab === "Tất cả" ? "Chi tiết" : "Xem chi tiết"}
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {(() => {
+                                                            // Xác định data nguồn
+                                                            let dataMap = [];
+                                                            if (activeTab === "Phiếu trình ký") dataMap = currentSubmissionsPageData;
+                                                            else if (activeTab === "Phiếu trình ký đã ký") dataMap = currentSignedPageData;
+                                                            else dataMap = currentSignList;
+
+                                                            if (dataMap.length === 0) return <tr><td colSpan="12" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Không tìm thấy dữ liệu</td></tr>;
+
+                                                            return dataMap.map((row, index) => (
+                                                                <tr key={row.id} style={{ verticalAlign: 'top' }}> {/* Căn lề trên để danh sách tên đẹp hơn */}
+
+                                                                    {activeTab === "Phiếu trình ký" && (
+                                                                        <td className={styles.textCenter} style={{ paddingTop: '12px' }}>
+                                                                            <input type="checkbox" checked={selectedSubmissions.includes(row.id)} onChange={() => handleSelectRow(row.id)} />
+                                                                        </td>
+                                                                    )}
+
+                                                                    <td className={styles.textCenter} style={{ paddingTop: '12px' }}>{row.stt || index + 1}</td>
+
+                                                                    {activeTab === "Tất cả" && (
+                                                                        <td className={styles.blueText} style={{ textAlign: 'left', paddingLeft: '10px', paddingTop: '12px' }}>
+                                                                            {row.name}
+                                                                        </td>
+                                                                    )}
+
+                                                                    {/* Tên phiếu */}
+                                                                    {/* --- CỘT TÊN PHIẾU --- */}
+                                                                    <td
+                                                                        style={{ textAlign: 'left', paddingLeft: '15px', paddingTop: '12px', color: '#0052cc', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
+                                                                        onClick={() => setPreviewRecord(row)}
+                                                                    >
+                                                                        {/* SỬA: Luôn hiển thị 2 loại phiếu này cho TOÀN BỘ các tab trong mục Ký số */}
+                                                                        {/* SỬA THÀNH: Hiển thị tên phiếu cụ thể theo yêu cầu */}
+                                                                        {row.id % 2 === 0 ? "Phiếu khám lâm sàng 1" : "Phiếu xét nghiệm công thức máu"}
+                                                                    </td>
+
+
+                                                                    {activeTab === "Tất cả" && <td style={{ textAlign: 'left', paddingLeft: '15px', paddingTop: '12px' }}>{row.type}</td>}
+                                                                    {activeTab === "Tất cả" && <td className={styles.textCenter} style={{ fontWeight: 'bold', paddingTop: '12px' }}>{row.signCount}</td>}
+
+                                                                    {/* --- CỘT NGƯỜI KÝ (SỬA Ở ĐÂY) --- */}
+                                                                    <td style={{ textAlign: 'left', paddingLeft: '10px', paddingTop: '12px' }}>
+                                                                        {activeTab === "Tất cả" ? (
+                                                                            // LOGIC TỰ ĐỘNG SINH TÊN DỰA VÀO SỐ LƯỢNG CHỮ KÝ (Vd: 0/2 -> 2 tên)
+                                                                            (() => {
+                                                                                const totalSign = parseInt(row.signCount?.split('/')[1] || 1);
+                                                                                const names = ["Nguyễn Văn An (System)"]; // Người đầu tiên luôn có
+
+                                                                                if (totalSign >= 2) names.push("Bs Trịnh Văn Tam");
+                                                                                if (totalSign >= 3) names.push("Bs CKI Hoàng Đức Trung");
+                                                                                if (totalSign >= 4) names.push("Ths.Bs. Đinh Hữu Việt");
+                                                                                if (totalSign >= 5) names.push("Bs Đào Văn Kiên");
+
+                                                                                return names.map((n, i) => (
+                                                                                    <div key={i} style={{ color: '#0052cc', marginBottom: '6px', whiteSpace: 'nowrap' }}>
+                                                                                        • {n}
+                                                                                    </div>
+                                                                                ))
+                                                                            })()
+                                                                        ) : (
+                                                                            <span className={styles.blueText}>{row.submitter || row.signer || "Nguyễn Văn An (System)"}</span>
+                                                                        )}
+                                                                    </td>
+
+                                                                    {/* Thời gian */}
+                                                                    <td className={styles.textCenter} style={{ paddingTop: '12px' }}>{row.submitTime || row.signTime || "-"}</td>
+                                                                    {activeTab !== "Tất cả" && <td className={styles.textCenter} style={{ paddingTop: '12px' }}>{row.signTime || "-"}</td>}
+
+                                                                    {/* Trạng thái */}
+                                                                    <td className={styles.textCenter} style={{ paddingTop: '12px' }}>
+                                                                        <span className={styles.statusBadge} style={{
+                                                                            color: (row.status === 'Đã ký' || row.status === 'Hoàn thành') ? '#28a745' : '#dc3545',
+                                                                            background: (row.status === 'Đã ký' || row.status === 'Hoàn thành') ? '#e6f4ea' : '#fce4e4',
+                                                                            border: `1px solid ${(row.status === 'Đã ký' || row.status === 'Hoàn thành') ? '#ceead6' : '#fad2cf'}`
+                                                                        }}>
+                                                                            {row.status}
+                                                                        </span>
+                                                                    </td>
+
+                                                                    {/* --- CỘT TÁC VỤ (Xem chi tiết) --- */}
+                                                                    <td className={styles.textCenter} style={{ paddingTop: '12px' }}>
+                                                                        <a href="#" className={styles.blueText} style={{ textDecoration: 'underline', fontSize: '12px' }}
+
+
+                                                                            onClick={(e) => { e.preventDefault(); setPreviewRecord(row); }}
+                                                                        >
+                                                                            {activeTab === "Tất cả" ? "Xem chi tiết" : "Xem chi tiết"}
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                            ));
+                                                        })()}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* 3. PHÂN TRANG */}
+                                            <div className={styles.pagination}>
+                                                <span style={{ fontSize: '12px', color: '#666', marginRight: 'auto' }}>
+                                                    Tổng: <b>{
+                                                        activeTab === "Phiếu trình ký đã ký" ? filteredSigned.length :
+                                                            activeTab === "Phiếu trình ký" ? filteredUnsigned.length :
+                                                                filteredSignList.length
+                                                    }</b> bản ghi
+                                                </span>
+
+                                                <button
+                                                    className={styles.pageBtn}
+                                                    onClick={() => {
+                                                        if (activeTab === "Phiếu trình ký đã ký") setCurrentSignPage(prev => Math.max(prev - 1, 1));
+                                                        else if (activeTab === "Phiếu trình ký") setSubPage(prev => Math.max(prev - 1, 1));
+                                                        else setCurrentSignPage(prev => Math.max(prev - 1, 1));
+                                                    }}
+                                                    disabled={(activeTab === "Phiếu trình ký đã ký" ? currentSignPage : activeTab === "Phiếu trình ký" ? subPage : currentSignPage) === 1}
+                                                >
+                                                    &lt;
+                                                </button>
+
+                                                {getPaginationGroup(
+                                                    activeTab === "Phiếu trình ký đã ký" ? currentSignPage : (activeTab === "Phiếu trình ký" ? subPage : currentSignPage),
+                                                    activeTab === "Phiếu trình ký đã ký" ? totalSignedPages : (activeTab === "Phiếu trình ký" ? totalSubPagesFiltered : totalSignPages)
+                                                ).map((item, index) => (
+                                                    <button
+                                                        key={index}
+                                                        className={`${styles.pageBtn} ${(activeTab === "Phiếu trình ký đã ký" ? currentSignPage : (activeTab === "Phiếu trình ký" ? subPage : currentSignPage)) === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`}
+                                                        onClick={() => {
+                                                            if (typeof item === 'number') {
+                                                                if (activeTab === "Phiếu trình ký đã ký") setCurrentSignPage(item);
+                                                                else if (activeTab === "Phiếu trình ký") setSubPage(item);
+                                                                else setCurrentSignPage(item);
+                                                            }
+                                                        }}
+                                                        disabled={item === '...'}
+                                                    >
+                                                        {item}
+                                                    </button>
+                                                ))}
+
+                                                <button
+                                                    className={styles.pageBtn}
+                                                    onClick={() => {
+                                                        if (activeTab === "Phiếu trình ký đã ký") setCurrentSignPage(prev => Math.min(prev + 1, totalSignedPages));
+                                                        else if (activeTab === "Phiếu trình ký") setSubPage(prev => Math.min(prev + 1, totalSubPagesFiltered));
+                                                        else setCurrentSignPage(prev => Math.min(prev + 1, totalSignPages));
+                                                    }}
+                                                    disabled={(activeTab === "Phiếu trình ký đã ký" ? currentSignPage : (activeTab === "Phiếu trình ký" ? subPage : currentSignPage)) === (activeTab === "Phiếu trình ký đã ký" ? totalSignedPages : (activeTab === "Phiếu trình ký" ? totalSubPagesFiltered : totalSignPages))}
+                                                >
+                                                    &gt;
+                                                </button>
+
+                                                <select
+                                                    className={styles.limitSelect}
+                                                    value={activeTab.includes("trình") ? (activeTab === "Phiếu trình ký" ? subPerPage : signPerPage) : signPerPage}
+                                                    onChange={(e) => {
+                                                        const val = Number(e.target.value);
+                                                        if (activeTab === "Phiếu trình ký") { setSubPerPage(val); setSubPage(1); }
+                                                        else { setSignPerPage(val); setCurrentSignPage(1); }
+                                                    }}
+                                                >
+                                                    <option value={5}>5 / trang</option>
+                                                    <option value={10}>10 / trang</option>
+                                                    <option value={20}>20 / trang</option>
+                                                    <option value={50}>50 / trang</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </>
+                        ) : currentNav === "Cài đặt" ? (
+                            <>
+                                {/* === GIAO DIỆN CÀI ĐẶT === */}
                                 <div className={styles.controlPanel}>
-                                    {/* 1. Hàng Tabs Chính (Màu Xanh - Giống HSBA) */}
-                                    {/* Bỏ style background gradient cũ đi để nhận style mặc định từ file CSS */}
-                                    <div className={styles.tabsRow}>
-                                        {["Tất cả", "Đã ký", "Chưa ký", "Phiếu trình ký", "Phiếu trình ký đã ký"].map(tab => (
+                                    {/* 1. THANH MENU TAB CON CỦA CÀI ĐẶT */}
+                                    <div className={styles.tabsRow} style={{ marginBottom: '15px' }}>
+                                        {["Quản lý nhân viên", "Quản lý nhóm quyền", "Quản lý quyền phiếu", "Quản lý lưu trữ", "Quản lý khung phiếu", "Quản lý người ký", "Quản lý phiếu in", "Cài đặt chung"].map(tab => (
                                             <button
                                                 key={tab}
-                                                // Sử dụng class tabBtn chuẩn để có màu xanh/trắng khi active
-                                                className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
-                                                onClick={() => setActiveTab(tab)}
+                                                className={`${styles.tabBtn} ${settingsTab === tab ? styles.active : ''}`}
+                                                onClick={() => {
+                                                    setSettingsTab(tab);
+                                                    // Reset trang khi chuyển tab
+                                                    setEmpPage(1);
+                                                    setSignerPage(1);
+                                                }}
+                                                style={{ fontSize: '13px', padding: '8px 12px' }}
                                             >
                                                 {tab}
                                             </button>
                                         ))}
                                     </div>
 
-                                    {/* 2. Hàng Tabs Phụ (Màu Xám - Giống HSBA) */}
-                                    {/* Thêm hàng này để cấu trúc giống hệt hình mẫu, có thể để trống hoặc thêm bộ lọc trạng thái phụ */}
-                                    <div className={styles.processTabsRow}>
-                                        {["Tất cả", "Cấp cứu", "Nội trú", "Ngoại trú"].map((tab) => (
-                                            <button
-                                                key={tab}
-                                                className={`${styles.processBtn} ${processTab === tab ? styles.active : ''}`}
-                                                onClick={() => setProcessTab(tab)}
-                                            >
-                                                {tab}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {/* ================================================================================= */}
+                                    {/* CASE 1: TAB QUẢN LÝ NHÂN VIÊN */}
+                                    {/* ================================================================================= */}
+                                    {settingsTab === "Quản lý nhân viên" && (() => {
+                                        // Logic lọc & phân trang Nhân viên
+                                        const filteredEmployees = employeeList.filter(emp =>
+                                            emp.name.toLowerCase().includes(empSearch.toLowerCase()) ||
+                                            emp.email.toLowerCase().includes(empSearch.toLowerCase()) ||
+                                            emp.phone.includes(empSearch)
+                                        );
+                                        const indexOfLastEmp = empPage * empPerPage;
+                                        const indexOfFirstEmp = indexOfLastEmp - empPerPage;
+                                        const currentEmployees = filteredEmployees.slice(indexOfFirstEmp, indexOfLastEmp);
+                                        const totalEmpPages = Math.ceil(filteredEmployees.length / empPerPage);
 
-                                    {/* 3. Hàng Bộ lọc (Filter Row) */}
-                                    <div className={styles.filterRow}>
-                                        <div className={styles.filterGroup}>
-                                            <label>Loại hồ sơ</label>
-                                            <select><option>Tất cả</option></select>
-                                        </div>
-                                        <div className={styles.filterGroup}>
-                                            <label>Người ký</label>
-                                            <select><option>Tất cả</option></select>
-                                        </div>
-                                        <div className={styles.filterGroup}>
-                                            <label>Ngày tạo</label>
-                                            <select><option>Tất cả</option></select>
-                                        </div>
+                                        return (
+                                            <>
+                                                {/* Khung thống kê & Tìm kiếm */}
+                                                <div className={styles.filterRow} style={{ marginTop: '15px', padding: '15px', backgroundColor: '#e6f4ff', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', gap: '15px' }}>
+                                                        <div style={{ background: 'white', padding: '8px 16px', borderRadius: '6px', border: '1px solid #91d5ff', color: '#0052cc', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>Tổng số: {filteredEmployees.length}</div>
+                                                        <div style={{ background: 'white', padding: '8px 16px', borderRadius: '6px', border: '1px solid #91d5ff', color: '#28a745', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>Hoạt động: {filteredEmployees.filter(e => e.status === "Đang hoạt động").length}</div>
+                                                        <div style={{ background: 'white', padding: '8px 16px', borderRadius: '6px', border: '1px solid #91d5ff', color: '#666', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>Dừng: {filteredEmployees.filter(e => e.status !== "Đang hoạt động").length}</div>
+                                                    </div>
+                                                    <div className={styles.actionGroup}>
+                                                        <input type="text" placeholder="Tìm kiếm nhân viên..." className={styles.searchInput} style={{ width: '250px' }} value={empSearch} onChange={(e) => { setEmpSearch(e.target.value); setEmpPage(1); }} />
+                                                        <button className={styles.addBtn} style={{ marginLeft: '10px' }} onClick={() => setShowAddEmpModal(true)}>Thêm nhân viên</button>
+                                                    </div>
+                                                </div>
 
-                                        <div className={styles.spacer}></div>
+                                                {/* Bảng Nhân viên */}
+                                                <div className={styles.tableContainer} style={{ marginTop: '15px' }}>
+                                                    <table className={styles.dataTable}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
+                                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Họ và tên</th>
+                                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Email</th>
+                                                                <th style={{ textAlign: 'left' }}>SĐT</th>
+                                                                <th className={styles.textCenter}>Giới tính</th>
+                                                                <th className={styles.textCenter}>Ngày sinh</th>
 
-                                        <div className={styles.actionGroup}>
-                                            <input type="text" placeholder="Tìm kiếm..." className={styles.searchInput} />
-                                            {/* Nút tìm kiếm hoặc hành động khác nếu cần */}
-                                        </div>
-                                    </div>
+                                                                {/* --- (MỚI) CỘT VAI TRÒ --- */}
+                                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Vai trò</th>
+
+                                                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Khoa</th>
+                                                                <th className={styles.textCenter}>Trạng thái</th>
+                                                                <th className={styles.textCenter}>Tác vụ</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {currentEmployees.length > 0 ? (
+                                                                currentEmployees.map((emp, index) => (
+                                                                    <tr key={index}>
+                                                                        <td className={styles.textCenter}>{indexOfFirstEmp + index + 1}</td>
+                                                                        <td className={styles.blueText} style={{ textAlign: 'left', paddingLeft: '10px', fontWeight: '500' }}>{emp.name}</td>
+                                                                        <td style={{ textAlign: 'left', paddingLeft: '10px' }}>{emp.email}</td>
+                                                                        <td style={{ textAlign: 'left' }}>{emp.phone}</td>
+                                                                        <td className={styles.textCenter}>{emp.gender}</td>
+                                                                        <td className={styles.textCenter}>{emp.dob}</td>
+
+                                                                        {/* CỘT VAI TRÒ */}
+                                                                        <td style={{ textAlign: 'left', paddingLeft: '10px' }}>
+                                                                            <span style={{ backgroundColor: '#f0f5ff', color: '#0052cc', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                                                                                {emp.role}
+                                                                            </span>
+                                                                        </td>
+
+                                                                        <td style={{ textAlign: 'left', paddingLeft: '10px' }}>{emp.dept}</td>
+
+                                                                        {/* TRẠNG THÁI */}
+                                                                        <td className={styles.textCenter}>
+                                                                            <span style={{ color: emp.status === 'Đang hoạt động' ? '#28a745' : '#dc3545', fontWeight: '500' }}>
+                                                                                {emp.status}
+                                                                            </span>
+                                                                        </td>
+
+                                                                        {/* TÁC VỤ: CHỈ CÒN NÚT SỬA */}
+                                                                        <td className={styles.textCenter}>
+                                                                            <div className={styles.actionButtons}>
+                                                                                <button
+                                                                                    className={styles.editBtn}
+                                                                                    title="Sửa thông tin"
+                                                                                    onClick={() => handleOpenEditEmp(emp)}
+                                                                                >
+                                                                                    ✏️
+                                                                                </button>
+                                                                                {/* Đã xóa nút Delete ở đây */}
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                            ) : (<tr><td colSpan="10" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Không tìm thấy nhân viên</td></tr>)}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                {/* Phân trang Nhân viên */}
+                                                {filteredEmployees.length > 0 && (
+                                                    <div className={styles.pagination}>
+                                                        <span style={{ fontSize: '12px', color: '#666', marginRight: 'auto' }}>Tổng: <b>{filteredEmployees.length}</b></span>
+                                                        <button className={styles.pageBtn} onClick={() => setEmpPage(prev => Math.max(prev - 1, 1))} disabled={empPage === 1}>&lt;</button>
+                                                        {getPaginationGroup(empPage, totalEmpPages).map((item, index) => (
+                                                            <button key={index} className={`${styles.pageBtn} ${empPage === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`} onClick={() => typeof item === 'number' && setEmpPage(item)} disabled={item === '...'}>{item}</button>
+                                                        ))}
+                                                        <button className={styles.pageBtn} onClick={() => setEmpPage(prev => Math.min(prev + 1, totalEmpPages))} disabled={empPage === totalEmpPages}>&gt;</button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+
+                                    {/* ================================================================================= */}
+                                    {/* CASE 2: TAB QUẢN LÝ NGƯỜI KÝ (CODE CŨ CỦA ANH ĐÂY) */}
+                                    {/* ================================================================================= */}
+                                    {settingsTab === "Quản lý người ký" && (() => {
+                                        // Logic lọc Người ký
+                                        const filteredSigners = manageSignerList.filter(s => {
+                                            const matchName = s.name.toLowerCase().includes(signerSearch.toLowerCase());
+                                            const matchStatus = signerStatusFilter === "Tất cả" || s.status === signerStatusFilter;
+                                            return matchName && matchStatus;
+                                        });
+                                        const indexOfLastSigner = signerPage * signerPerPage;
+                                        const indexOfFirstSigner = indexOfLastSigner - signerPerPage;
+                                        const currentSigners = filteredSigners.slice(indexOfFirstSigner, indexOfLastSigner);
+                                        const totalSignerPages = Math.ceil(filteredSigners.length / signerPerPage);
+
+                                        return (
+                                            <>
+                                                {/* Bộ lọc Người ký */}
+                                                <div className={styles.filterRow} style={{ marginTop: '15px', padding: '15px', backgroundColor: '#e6f4ff', borderRadius: '8px' }}>
+                                                    <div className={styles.filterGroup}>
+                                                        <label style={{ fontWeight: 'bold', color: '#333' }}>Tìm kiếm</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Tìm tên bác sĩ..."
+                                                            className={styles.searchInput}
+                                                            style={{ width: '300px', backgroundColor: 'white' }}
+                                                            value={signerSearch}
+                                                            onChange={(e) => { setSignerSearch(e.target.value); setSignerPage(1); }}
+                                                        />
+                                                    </div>
+                                                    <div className={styles.filterGroup} style={{ marginLeft: '20px' }}>
+                                                        <label style={{ fontWeight: 'bold', color: '#333' }}>Trạng thái</label>
+                                                        <select
+                                                            style={{ height: '36px', borderRadius: '4px', borderColor: '#ccc', padding: '0 10px' }}
+                                                            value={signerStatusFilter}
+                                                            onChange={(e) => { setSignerStatusFilter(e.target.value); setSignerPage(1); }}
+                                                        >
+                                                            <option value="Tất cả">Tất cả</option>
+                                                            <option value="Đang hoạt động">Đang hoạt động</option>
+                                                            <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className={styles.spacer}></div>
+                                                    <button className={styles.addBtn} style={{ backgroundColor: '#0052cc', color: 'white' }} onClick={handleOpenSelectSigner}>Lựa chọn người ký</button>
+                                                </div>
+
+                                                {/* Bảng Người ký */}
+                                                <div className={styles.tableContainer} style={{ marginTop: '15px' }}>
+                                                    <table className={styles.dataTable}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
+                                                                <th style={{ textAlign: 'left', paddingLeft: '20px' }}>Tên bác sĩ</th>
+                                                                <th style={{ textAlign: 'left', paddingLeft: '20px' }}>Khoa</th>
+                                                                <th className={styles.textCenter}>Trạng thái</th>
+                                                                <th className={styles.textCenter}>Tác vụ</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {currentSigners.length > 0 ? (
+                                                                currentSigners.map((s, index) => (
+                                                                    <tr key={s.id}>
+                                                                        <td className={styles.textCenter}>{indexOfFirstSigner + index + 1}</td>
+                                                                        <td className={styles.blueText} style={{ textAlign: 'left', paddingLeft: '20px', fontWeight: '500' }}>{s.name}</td>
+                                                                        <td style={{ textAlign: 'left', paddingLeft: '20px' }}>{s.dept}</td>
+                                                                        <td className={styles.textCenter}>
+                                                                            <span style={{ color: s.status === 'Đang hoạt động' ? '#28a745' : '#dc3545', fontSize: '13px' }}>{s.status}</span>
+                                                                        </td>
+                                                                        <td className={styles.textCenter}>
+                                                                            {/* --- (MỚI) NÚT SỬA TRẠNG THÁI --- */}
+                                                                            <button
+                                                                                className={styles.editBtn}
+                                                                                style={{ background: 'transparent', border: 'none', fontSize: '16px', cursor: 'pointer', marginRight: '10px' }}
+                                                                                onClick={() => handleOpenEditSigner(s)}
+                                                                                title="Sửa trạng thái"
+                                                                            >
+                                                                                ✏️
+                                                                            </button>
+
+
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                            ) : (<tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Không tìm thấy dữ liệu</td></tr>)}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                {/* Phân trang Người ký */}
+                                                {filteredSigners.length > 0 && (
+                                                    <div className={styles.pagination}>
+                                                        <span style={{ fontSize: '12px', color: '#666', marginRight: 'auto' }}>Tổng: <b>{filteredSigners.length}</b> bản ghi</span>
+                                                        <button className={styles.pageBtn} onClick={() => setSignerPage(prev => Math.max(prev - 1, 1))} disabled={signerPage === 1}>&lt;</button>
+                                                        {getPaginationGroup(signerPage, totalSignerPages).map((item, index) => (
+                                                            <button key={index} className={`${styles.pageBtn} ${signerPage === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`} onClick={() => typeof item === 'number' && setSignerPage(item)} disabled={item === '...'}>{item}</button>
+                                                        ))}
+                                                        <button className={styles.pageBtn} onClick={() => setSignerPage(prev => Math.min(prev + 1, totalSignerPages))} disabled={signerPage === totalSignerPages}>&gt;</button>
+                                                        <select className={styles.limitSelect} value={signerPerPage} onChange={(e) => { setSignerPerPage(Number(e.target.value)); setSignerPage(1); }}>
+                                                            <option value={5}>5 / trang</option><option value={10}>10 / trang</option><option value={20}>20 / trang</option>
+                                                        </select>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
-
-                                <div className={styles.tableContainer}>
-                                    <table className={styles.dataTable}>
-                                        <thead>
-                                            <tr>
-                                                <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
-                                                <th>Họ tên BN</th>
-                                                <th className={styles.textCenter}>Số hồ sơ</th>
-                                                <th>Tên phiếu</th>
-                                                <th className={styles.textCenter}>Ngày tạo</th>
-                                                <th>Loại phiếu</th>
-                                                <th className={styles.textCenter}>Số chữ ký</th>
-                                                <th>Người ký</th>
-                                                <th className={styles.textCenter}>Thời gian ký</th>
-                                                <th className={styles.textCenter}>Trạng thái</th>
-                                                <th className={styles.textCenter}>Chi tiết</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {currentSignList.map((row) => (
-                                                <tr key={row.id}>
-                                                    <td className={styles.textCenter}>{row.stt}</td>
-                                                    <td className={styles.blueText}>{row.name}</td>
-                                                    <td className={styles.textCenter}>{row.fileNo}</td>
-                                                    <td style={{ color: '#0052cc', fontWeight: 500 }}>{row.docName}</td>
-                                                    <td className={styles.textCenter}>{row.createdDate}</td>
-                                                    <td>{row.type}</td>
-                                                    <td className={styles.textCenter} style={{ color: row.status === 'Đã ký' ? '#28a745' : '#dc3545', fontWeight: 'bold' }}>{row.signCount}</td>
-                                                    <td>
-                                                        {row.signer ? (
-                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                <span style={{ fontSize: '11px', color: '#0052cc' }}>{row.signer}</span>
-                                                            </div>
-                                                        ) : ''}
-                                                    </td>
-                                                    <td className={styles.textCenter}>{row.signTime}</td>
-                                                    <td className={styles.textCenter}>
-                                                        <span className={styles.statusBadge} style={{
-                                                            color: row.status === 'Đã ký' ? '#28a745' : '#dc3545',
-                                                            backgroundColor: row.status === 'Đã ký' ? '#e6f4ea' : '#fce8e6',
-                                                            border: `1px solid ${row.status === 'Đã ký' ? '#ceead6' : '#fad2cf'}`
-                                                        }}>
-                                                            {row.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className={styles.textCenter}>
-                                                        <a href="#" style={{ color: '#0052cc', textDecoration: 'underline', fontSize: '12px' }}>Xem hồ sơ</a>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* --- PHÂN TRANG KÝ SỐ --- */}
-                                {digitalSignList.length > 0 && (
-                                    <div className={styles.pagination}>
-                                        <button
-                                            className={styles.pageBtn}
-                                            onClick={() => setCurrentSignPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentSignPage === 1}
-                                        >
-                                            &lt;
-                                        </button>
-
-                                        {getPaginationGroup(currentSignPage, totalSignPages).map((item, index) => (
-                                            <button
-                                                key={index}
-                                                className={`${styles.pageBtn} ${currentSignPage === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`}
-                                                onClick={() => typeof item === 'number' && setCurrentSignPage(item)}
-                                                disabled={item === '...'}
-                                            >
-                                                {item}
-                                            </button>
-                                        ))}
-
-                                        <button
-                                            className={styles.pageBtn}
-                                            onClick={() => setCurrentSignPage(prev => Math.min(prev + 1, totalSignPages))}
-                                            disabled={currentSignPage === totalSignPages}
-                                        >
-                                            &gt;
-                                        </button>
-
-                                        <select
-                                            className={styles.limitSelect}
-                                            value={signPerPage}
-                                            onChange={(e) => {
-                                                setSignPerPage(Number(e.target.value));
-                                                setCurrentSignPage(1);
-                                            }}
-                                        >
-                                            <option value={5}>5 / trang</option>
-                                            <option value={10}>10 / trang</option>
-                                            <option value={20}>20 / trang</option>
-                                            <option value={50}>50 / trang</option>
-                                        </select>
-                                    </div>
-                                )}
                             </>
-                        ) : (
-                            // --- C. MẶC ĐỊNH: HỒ SƠ BỆNH ÁN (HÌNH 1 - CODE CŨ CỦA BẠN) ---
-                            <>
-                                <div className={styles.controlPanel}>
-                                    <div className={styles.tabsRow}>{tabs.map(tab => <button key={tab} className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`} onClick={() => setActiveTab(tab)}>{tab}</button>)}</div>
-                                    <div className={styles.processTabsRow}>{["Tất cả", "Hồ sơ chờ", "Hồ sơ điều trị", "Hồ sơ hoàn thành"].map((tab) => <button key={tab} className={`${styles.processBtn} ${processTab === tab ? styles.active : ''}`} onClick={() => setProcessTab(tab)}>{tab}</button>)}</div>
-                                    <div className={styles.filterRow}>
-                                        <div className={styles.filterGroup}><label>Ngày tạo</label><select value={filterDate} onChange={(e) => setFilterDate(e.target.value)}><option value="Tất cả">Tất cả</option>{uniqueDates.map(date => <option key={date} value={date}>{date}</option>)}</select></div>
-                                        <div className={styles.actionGroup}><input type="text" placeholder="Tìm kiếm..." className={styles.searchInput} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /><button className={styles.addBtn} onClick={() => setShowAddModal(true)}><span>⊕</span> Thêm hồ sơ</button></div>
-                                    </div>
-                                </div>
-                                <div className={styles.tableContainer}>
-                                    <table className={styles.dataTable}>
-                                        <thead>
-                                            <tr><th style={{ width: '50px' }}>STT</th><th>Ghi chú</th><th>Trạng thái</th><th>Số hồ sơ</th><th>Loại hồ sơ</th><th>Năm</th><th>Mã BN</th><th>Họ tên</th><th>Giới tính</th><th>Ngày tạo</th><th>Người tạo</th><th>Ngày cập nhật</th><th>Người cập nhật</th><th>Tác vụ</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            {currentRecords.map((row, index) => (
-                                                <tr key={row.id}>
-                                                    <td className={styles.textCenter}>{index + 1}</td>
-                                                    <td>{row.note}</td>
-                                                    <td><span className={`${styles.statusBadge} ${row.status === 'Lưu kho' ? styles.red : styles.blue}`}>{row.status}</span></td>
-                                                    <td className={styles.textCenter}>{row.fileNo}</td>
-                                                    <td className={styles.blueText} style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => handleRecordClick(row)}>{row.type}</td>
-                                                    <td className={styles.textCenter}>{row.year}</td><td>{row.pid}</td><td className={styles.boldText}>{row.name}</td>
-                                                    <td className={styles.textCenter}>Nữ</td><td className={styles.textCenter}>{row.createdDate}</td><td>{row.creator}</td><td className={styles.textCenter}>{row.updatedDate}</td><td>{row.updater}</td>
-                                                    <td className={styles.textCenter}><button className={styles.actionBtn}>...</button></td>
-                                                </tr>
+                        ) :
+                            (
+                                // --- C. MẶC ĐỊNH: HỒ SƠ BỆNH ÁN (ĐÃ FIX CĂN TRÁI & GIỮ BỘ LỌC) ---
+                                <>
+                                    <div className={styles.controlPanel}>
+                                        <div className={styles.tabsRow}>
+                                            {tabs.map(tab => (
+                                                <button
+                                                    key={tab}
+                                                    className={`${styles.tabBtn} ${activeTab === tab ? styles.active : ''}`}
+                                                    onClick={() => setActiveTab(tab)}
+                                                >
+                                                    {tab}
+                                                </button>
                                             ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {/* Pagination (Giữ nguyên) */}
-                                {filteredRecords.length > 0 && (
-                                    <div className={styles.pagination}>
-                                        <button className={styles.pageBtn} onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>&lt;</button>
-                                        {getPaginationGroup(currentPage, totalPages).map((item, index) => (
-                                            <button key={index} className={`${styles.pageBtn} ${currentPage === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`} onClick={() => typeof item === 'number' && handlePageChange(item)} disabled={item === '...'}>{item}</button>
-                                        ))}
-                                        <button className={styles.pageBtn} onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>&gt;</button>
-                                        <select className={styles.limitSelect} value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}><option value={5}>5 / trang</option><option value={10}>10 / trang</option><option value={20}>20 / trang</option><option value={50}>50 / trang</option></select>
+                                        </div>
+                                        <div className={styles.processTabsRow}>
+                                            {["Tất cả", "Hồ sơ chờ", "Hồ sơ điều trị", "Hồ sơ hoàn thành"].map((tab) => (
+                                                <button
+                                                    key={tab}
+                                                    className={`${styles.processBtn} ${processTab === tab ? styles.active : ''}`}
+                                                    onClick={() => setProcessTab(tab)}
+                                                >
+                                                    {tab}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* --- BỘ LỌC (GIỮ NGUYÊN NHƯ CŨ) --- */}
+                                        {/* --- BỘ LỌC (ĐÃ THÊM: TRẠNG THÁI & NĂM) --- */}
+                                        <div className={styles.filterRow}>
+
+                                            {/* 1. Lọc Ngày tạo (Cũ) */}
+                                            <div className={styles.filterGroup}>
+                                                <label>Ngày tạo</label>
+                                                <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)}>
+                                                    <option value="Tất cả">Tất cả</option>
+                                                    {uniqueDates.map(date => <option key={date} value={date}>{date}</option>)}
+                                                </select>
+                                            </div>
+
+                                            {/* 2. Lọc Trạng thái (MỚI) */}
+                                            <div className={styles.filterGroup} style={{ marginLeft: '15px' }}>
+                                                <label>Trạng thái</label>
+                                                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                                                    <option value="Tất cả">Tất cả</option>
+                                                    <option value="Lưu kho">Lưu kho</option>
+                                                    <option value="Đang điều trị">Đang điều trị</option>
+                                                    <option value="Hoàn thành">Hoàn thành</option>
+                                                </select>
+                                            </div>
+
+                                            {/* 3. Lọc Năm (MỚI) */}
+                                            <div className={styles.filterGroup} style={{ marginLeft: '15px' }}>
+                                                <label>Năm</label>
+                                                <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+                                                    <option value="Tất cả">Tất cả</option>
+                                                    {uniqueYears.map(y => <option key={y} value={y}>{y}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div className={styles.spacer}></div>
+
+                                            <div className={styles.actionGroup}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Tìm kiếm..."
+                                                    className={styles.searchInput}
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                />
+                                                <button className={styles.addBtn} onClick={() => setShowAddModal(true)}><span>⊕</span> Thêm hồ sơ</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </>
-                        )}
+
+                                    {/* --- BẢNG DỮ LIỆU --- */}
+                                    {/* --- BẢNG HỒ SƠ BỆNH ÁN (ĐÃ XÓA CỘT: Ghi chú, Số hồ sơ, Ngày/Người cập nhật) --- */}
+                                    <div className={styles.tableContainer}>
+                                        <table className={styles.dataTable}>
+                                            <thead>
+                                                <tr>
+                                                    <th className={styles.textCenter} style={{ width: '50px' }}>STT</th>
+                                                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Trạng thái</th>
+                                                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Loại hồ sơ</th>
+                                                    <th className={styles.textCenter}>Năm</th>
+                                                    <th>Mã BN</th>
+                                                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Họ tên</th>
+                                                    <th className={styles.textCenter}>Giới tính</th>
+                                                    <th className={styles.textCenter}>Ngày tạo</th>
+                                                    <th>Người tạo</th>
+                                                    <th className={styles.textCenter}>Tác vụ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {currentRecords.length > 0 ? (
+                                                    currentRecords.map((row, index) => (
+                                                        <tr key={row.id}>
+                                                            <td className={styles.textCenter}>{index + 1}</td>
+
+                                                            <td style={{ textAlign: 'left', paddingLeft: '10px' }}>
+                                                                <span className={`${styles.statusBadge} ${row.status === 'Lưu kho' ? styles.red : styles.blue}`}>
+                                                                    {row.status}
+                                                                </span>
+                                                            </td>
+
+                                                            <td
+                                                                className={styles.blueText}
+                                                                style={{ cursor: 'pointer', textDecoration: 'underline', textAlign: 'left', paddingLeft: '10px' }}
+                                                                onClick={() => handleRecordClick(row)}
+                                                            >
+                                                                {row.type}
+                                                            </td>
+
+                                                            <td className={styles.textCenter}>{row.year}</td>
+                                                            <td>{row.pid}</td>
+                                                            <td className={styles.boldText} style={{ textAlign: 'left', paddingLeft: '10px' }}>{row.name}</td>
+                                                            <td className={styles.textCenter}>Nữ</td>
+                                                            <td className={styles.textCenter}>{row.createdDate}</td>
+                                                            <td>{row.creator}</td>
+                                                            <td className={styles.textCenter}><button
+                                                                className={styles.editBtn}
+                                                                onClick={() => handleOpenStatusEdit(row)}
+                                                                title="Sửa trạng thái"
+                                                            >
+                                                                ✏️
+                                                            </button></td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr><td colSpan="10" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Không tìm thấy hồ sơ phù hợp</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Pagination (GIỮ NGUYÊN) */}
+                                    {filteredRecords.length > 0 && (
+                                        <div className={styles.pagination}>
+                                            <span style={{ fontSize: '12px', color: '#666', marginRight: 'auto' }}>
+                                                Tổng: <b>{filteredRecords.length}</b> bản ghi
+                                            </span>
+                                            <button className={styles.pageBtn} onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>&lt;</button>
+                                            {getPaginationGroup(currentPage, totalPages).map((item, index) => (
+                                                <button key={index} className={`${styles.pageBtn} ${currentPage === item ? styles.active : ''} ${item === '...' ? styles.dots : ''}`} onClick={() => typeof item === 'number' && handlePageChange(item)} disabled={item === '...'}>{item}</button>
+                                            ))}
+                                            <button className={styles.pageBtn} onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>&gt;</button>
+                                            <select className={styles.limitSelect} value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
+                                                <option value={5}>5 / trang</option>
+                                                <option value={10}>10 / trang</option>
+                                                <option value={20}>20 / trang</option>
+                                                <option value={50}>50 / trang</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                     </div>
                 )}
             </main>
@@ -1231,9 +2374,33 @@ const ERM = () => {
                         <div className={styles.modalBody}>
                             {addStep === 1 ? (
                                 <>
+                                    {/* --- 2. GIAO DIỆN MODAL (ĐÃ THÊM HIỂN THỊ LỖI MÀU ĐỎ) --- */}
                                     <div className={styles.inputRow}>
-                                        <div className={styles.inputGroup}><label>Mã bệnh nhân</label><input type="text" name="patientCode" value={formInput.patientCode} onChange={handleInputChange} /></div>
-                                        <div className={styles.inputGroup}><label>Năm hồ sơ</label><input type="text" name="year" value={formInput.year} onChange={handleInputChange} /></div>
+                                        <div className={styles.inputGroup}>
+                                            <label>Mã bệnh nhân</label>
+                                            <input
+                                                type="text"
+                                                name="patientCode"
+                                                value={formInput.patientCode}
+                                                onChange={handleInputChange}
+                                                style={{ borderColor: formErrors.patientCode ? 'red' : '#ccc' }}
+                                            />
+                                            {/* Dòng này để hiện lỗi Mã BN */}
+                                            {formErrors.patientCode && <span style={{ color: 'red', fontSize: '12px', fontStyle: 'italic' }}>{formErrors.patientCode}</span>}
+                                        </div>
+
+                                        <div className={styles.inputGroup}>
+                                            <label>Năm hồ sơ</label>
+                                            <input
+                                                type="text"
+                                                name="year"
+                                                value={formInput.year}
+                                                onChange={handleInputChange}
+                                                style={{ borderColor: formErrors.year ? 'red' : '#ccc' }}
+                                            />
+                                            {/* Dòng này để hiện lỗi Năm */}
+                                            {formErrors.year && <span style={{ color: 'red', fontSize: '12px', fontStyle: 'italic' }}>{formErrors.year}</span>}
+                                        </div>
                                     </div>
                                     <table className={styles.typeTable}>
                                         <thead><tr><th>STT</th><th>Mã loại</th><th>Tên loại</th><th>Tác vụ</th></tr></thead>
@@ -1242,9 +2409,94 @@ const ERM = () => {
                                     <div className={styles.modalFooter}><button className={styles.cancelBtn} onClick={handleCloseModal}>Huỷ</button><button className={styles.saveBtn} onClick={handleNextStep}>Lưu</button></div>
                                 </>
                             ) : (
-                                <div className={styles.confirmStep}>
-                                    <div className={styles.infoForm}><label>Họ tên:</label><input readOnly value="VŨ THỊ THẢO" /></div>
-                                    <div className={styles.confirmFooter}><button className={styles.backBtnRed} onClick={handleBack}>Quay lại</button><button className={styles.addBtnBlue} onClick={handleFinalAdd}>Thêm</button></div>
+                                // --- GIAO DIỆN BƯỚC 2: XÁC NHẬN (STYLE NGANG GIỐNG HÌNH 2) ---
+                                <div className={styles.confirmStep} style={{ padding: '0 20px' }}>
+
+                                    {/* 1. Logic tìm thông tin */}
+                                    {(() => {
+                                        const foundPatient = patientList.find(p => String(p.pid) === String(formInput.patientCode).trim()) || {
+                                            name: "Không tìm thấy", pid: formInput.patientCode, gender: "", dob: "", phone: ""
+                                        };
+
+                                        return (
+                                            <>
+                                                {/* 2. Avatar tròn ở giữa */}
+                                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', marginTop: '5px' }}>
+                                                    <div style={{
+                                                        width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)', border: '2px solid white'
+                                                    }}>
+                                                        {/* Ảnh placeholder nữ bác sĩ/bệnh nhân */}
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/4228/4228721.png" alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    </div>
+                                                </div>
+
+                                                {/* 3. Form thông tin (Label trái - Input phải) */}
+                                                <div className={styles.infoForm}>
+                                                    {[
+                                                        { label: "Mã bệnh nhân", value: foundPatient.pid },
+                                                        { label: "Họ và tên", value: foundPatient.name },
+                                                        { label: "Giới tính", value: foundPatient.gender },
+                                                        { label: "Ngày sinh", value: foundPatient.dob },
+                                                        { label: "Số điện thoại", value: foundPatient.phone }
+                                                    ].map((field, idx) => (
+                                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <label style={{
+                                                                width: '130px', // Cố định chiều rộng nhãn
+                                                                fontWeight: '500',
+                                                                color: '#333',
+                                                                fontSize: '14px',
+                                                                textAlign: 'left'
+                                                            }}>
+                                                                {field.label}:
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={field.value}
+                                                                readOnly
+                                                                style={{
+                                                                    flex: 1, // Input chiếm phần còn lại
+                                                                    padding: '8px 12px',
+                                                                    backgroundColor: '#f5f5f5', // Màu nền xám nhạt như hình
+                                                                    border: '1px solid #e0e0e0',
+                                                                    borderRadius: '4px',
+                                                                    color: '#555',
+                                                                    fontSize: '14px',
+                                                                    outline: 'none'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* 4. Footer Buttons (Căn giữa) */}
+                                                <div className={styles.confirmFooter} style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '25px', marginBottom: '10px' }}>
+                                                    <button
+                                                        className={styles.backBtnRed}
+                                                        onClick={handleBack}
+                                                        style={{
+                                                            backgroundColor: '#ff4d4f', color: 'white',
+                                                            padding: '8px 30px', border: 'none', borderRadius: '4px',
+                                                            fontWeight: '600', cursor: 'pointer', fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        Quay lại
+                                                    </button>
+                                                    <button
+                                                        className={styles.addBtnBlue}
+                                                        onClick={handleFinalAdd}
+                                                        style={{
+                                                            backgroundColor: '#1890ff', color: 'white',
+                                                            padding: '8px 30px', border: 'none', borderRadius: '4px',
+                                                            fontWeight: '600', cursor: 'pointer', fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        Thêm
+                                                    </button>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             )}
                         </div>
@@ -1346,12 +2598,7 @@ const ERM = () => {
                                     <div className={styles.filterBar}>
                                         <h3>Danh sách nhân viên ký số</h3>
                                         {/* GẮN SỰ KIỆN MỞ MODAL QUẢN LÝ TẠI ĐÂY */}
-                                        <button
-                                            className={styles.blueBtn}
-                                            onClick={() => setShowManageStaffModal(true)}
-                                        >
-                                            Thêm/xóa nhân viên
-                                        </button>
+
                                     </div>
                                     <div className={styles.staffGrid}>
                                         {signStaffs.map((staff, idx) => (
@@ -1755,6 +3002,499 @@ const ERM = () => {
                         <div className={styles.modalFooter}>
                             <button className={styles.cancelBtn} onClick={() => setShowEditModal(false)}>Hủy bỏ</button>
                             <button className={styles.saveBtn} onClick={handleUpdatePatient}>
+                                <span>💾</span> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* --- POPUP HIỂN THỊ TỜ GIẤY (ĐÃ SỬA LOGIC HIỂN THỊ ĐÚNG LOẠI PHIẾU) --- */}
+            {previewRecord && (() => {
+                // 1. Xác định loại phiếu dựa trên ID (giống logic hiển thị ở bảng)
+                const isClinicalExam = previewRecord.id % 2 === 0; // Chẵn là Phiếu khám bệnh
+                const docTypeName = isClinicalExam ? "PHIẾU KHÁM LÂM SÀNG 1" : "PHIẾU XÉT NGHIỆM CÔNG THỨC MÁU";
+
+                // 2. Chuẩn bị dữ liệu hiển thị (Mapping đầy đủ)
+                const data = {
+                    ...previewRecord, // Lấy tất cả thuộc tính có sẵn
+                    name: previewRecord.name || "NGUYỄN VĂN A",
+                    pid: previewRecord.pid || "1108657",
+                    dob: previewRecord.dob || "01/01/1990",
+                    age: previewRecord.age || 34,
+                    gender: previewRecord.gender || "Nữ",
+                    address: previewRecord.address || "Số 15, Đường 3/2, Q.10, TP.HCM",
+                    diagnosis: previewRecord.diagnosis || "N21 CKK",
+
+                    // Cập nhật tên loại phiếu để hiển thị trên Header Modal
+                    type: docTypeName,
+
+                    signer: previewRecord.signer || "Nguyễn Văn An",
+                    signTime: previewRecord.signTime || "03/02/2026",
+                    status: previewRecord.status || "Chưa ký"
+                };
+
+                return (
+                    <div className={styles.modalOverlay} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)' }}>
+
+                        {/* Khung ngoài Modal */}
+                        <div style={{ width: '1000px', height: '95vh', background: '#525659', borderRadius: '8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                            {/* Header Modal */}
+                            <div style={{ padding: '12px 20px', background: '#323639', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #000' }}>
+                                <div style={{ fontSize: '14px' }}>Đang xem: <b>{data.type}</b></div>
+                                <button
+                                    onClick={() => setPreviewRecord(null)}
+                                    style={{ background: '#d63031', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    ĐÓNG ✕
+                                </button>
+                            </div>
+
+                            {/* Body Modal (Có thanh cuộn) */}
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', justifyContent: 'center', background: '#525659' }}>
+
+                                {/* SỬA Ở ĐÂY: CHECK ĐIỀU KIỆN ĐỂ RENDER ĐÚNG FORM */}
+                                {isClinicalExam ? renderClinicalExam(data) : renderCommonECG(data)}
+
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* --- MODAL SỬA TRẠNG THÁI (CHỈ SỬA ĐƯỢC TRẠNG THÁI) --- */}
+            {showStatusModal && editingStatusRecord && (
+                <div className={styles.modalOverlay} style={{ zIndex: 4000 }}>
+                    <div className={styles.addModal} style={{ width: '400px' }}> {/* Modal nhỏ */}
+                        <div className={styles.modalHeader}>
+                            <h3>Cập nhật trạng thái</h3>
+                        </div>
+                        <div className={styles.modalBody} style={{ padding: '20px' }}>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Hồ sơ:</label>
+                                <input type="text" value={editingStatusRecord.name} disabled style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', padding: '8px' }} />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Trạng thái mới:</label>
+                                <select
+                                    value={tempStatus}
+                                    onChange={(e) => setTempStatus(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                >
+                                    <option value="Lưu kho">Lưu kho</option>
+                                    <option value="Đang điều trị">Đang điều trị</option>
+                                    <option value="Hoàn thành">Hoàn thành</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button className={styles.cancelBtn} onClick={() => setShowStatusModal(false)}>Hủy bỏ</button>
+                            <button className={styles.saveBtn} onClick={handleSaveStatusChange}>Lưu thay đổi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL LỰA CHỌN NGƯỜI KÝ (MỚI) --- */}
+            {/* --- MODAL LỰA CHỌN NGƯỜI KÝ (ĐÃ SỬA: NHỎ HƠN, CĂN TRÁI, BỎ CỘT CHỨC VỤ, BỎ NÚT X) --- */}
+            {showSelectSignerModal && (
+                <div className={styles.modalOverlay} style={{ zIndex: 5000 }}>
+                    {/* 1. Giảm width xuống 500px */}
+                    <div className={styles.addModal} style={{ width: '500px', maxWidth: '90vw' }}>
+
+                        <div className={styles.modalHeader}>
+                            <h3>Thêm người ký vào danh sách</h3>
+                            {/* 2. Đã xóa nút X ở đây */}
+                        </div>
+
+                        <div className={styles.modalBody} style={{ padding: '20px', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+
+                            {/* Thanh tìm kiếm */}
+                            <div style={{ marginBottom: '15px', display: 'flex' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Tìm theo tên hoặc khoa phòng..."
+                                    className={styles.searchInput}
+                                    style={{ width: '100%' }}
+                                    value={sourceSearch}
+                                    onChange={(e) => setSourceSearch(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Bảng danh sách nguồn */}
+                            <div className={styles.tableContainer} style={{ flex: 1, overflowY: 'auto', border: '1px solid #eee' }}>
+                                <table className={styles.dataTable}>
+                                    <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                                        <tr>
+                                            {/* Căn trái checkbox cho thẳng hàng nếu cần, hoặc để giữa cho đẹp */}
+                                            <th style={{ width: '40px', textAlign: 'left', paddingLeft: '15px' }}>#</th>
+                                            <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Họ tên nhân viên</th>
+                                            <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Khoa/Phòng</th>
+                                            {/* 3. Đã xóa cột Chức vụ */}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(() => {
+                                            let candidates = allStaffSource.filter(s =>
+                                                s.name.toLowerCase().includes(sourceSearch.toLowerCase()) ||
+                                                s.dept.toLowerCase().includes(sourceSearch.toLowerCase())
+                                            );
+
+                                            if (candidates.length === 0) {
+                                                // Sửa colSpan thành 3 vì bỏ 1 cột
+                                                return <tr><td colSpan="3" style={{ textAlign: 'left', padding: '20px', paddingLeft: '15px', color: '#999' }}>Không tìm thấy nhân viên phù hợp</td></tr>
+                                            }
+
+                                            return candidates.map(staff => (
+                                                <tr key={staff.id}
+                                                    style={{ cursor: 'pointer', backgroundColor: tempSelectedIds.includes(staff.id) ? '#e6f7ff' : 'white' }}
+                                                    onClick={() => handleToggleCandidate(staff.id)}
+                                                >
+                                                    <td style={{ textAlign: 'left', paddingLeft: '15px' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={tempSelectedIds.includes(staff.id)}
+                                                            onChange={() => handleToggleCandidate(staff.id)}
+                                                            style={{ cursor: 'pointer' }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ fontWeight: '500', textAlign: 'left', paddingLeft: '10px' }}>{staff.name}</td>
+                                                    <td style={{ textAlign: 'left', paddingLeft: '10px', color: '#666' }}>{staff.dept}</td>
+                                                    {/* Đã xóa dòng render Chức vụ */}
+                                                </tr>
+                                            ));
+                                        })()}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style={{ marginTop: '10px', fontSize: '13px', fontStyle: 'italic', color: '#666', textAlign: 'left' }}>
+                                Đã chọn: <b>{tempSelectedIds.length}</b> nhân viên
+                            </div>
+                        </div>
+
+                        <div className={styles.modalFooter}>
+                            <button className={styles.cancelBtn} onClick={() => setShowSelectSignerModal(false)}>Hủy bỏ</button>
+                            <button
+                                className={styles.saveBtn}
+                                onClick={handleSaveSelectedSigners}
+                                disabled={tempSelectedIds.length === 0}
+                                style={{ opacity: tempSelectedIds.length === 0 ? 0.6 : 1 }}
+                            >
+                                <span style={{ marginRight: '5px' }}>⬇</span>
+                                Thêm vào danh sách
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- (MỚI) MODAL SỬA TRẠNG THÁI NGƯỜI KÝ --- */}
+            {showEditSignerModal && editingSigner && (
+                <div className={styles.modalOverlay} style={{ zIndex: 6000 }}>
+                    <div className={styles.addModal} style={{ width: '400px' }}>
+                        <div className={styles.modalHeader}>
+                            <h3>Cập nhật trạng thái người ký</h3>
+
+                        </div>
+                        <div className={styles.modalBody} style={{ padding: '20px' }}>
+                            {/* Hiển thị tên (Disable) */}
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', textAlign: 'left' }}>Tên bác sĩ:</label>
+                                <input
+                                    type="text"
+                                    value={editingSigner.name}
+                                    disabled
+                                    style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', padding: '8px', color: '#666' }}
+                                />
+                            </div>
+
+                            {/* Hiển thị khoa (Disable) */}
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', textAlign: 'left' }}>Khoa:</label>
+                                <input
+                                    type="text"
+                                    value={editingSigner.dept || "---"}
+                                    disabled
+                                    style={{ width: '100%', background: '#f5f5f5', border: '1px solid #ddd', padding: '8px', color: '#666' }}
+                                />
+                            </div>
+
+                            {/* Dropdown chọn trạng thái (Cho phép sửa) */}
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Trạng thái:</label>
+                                <select
+                                    value={editingSigner.status}
+                                    onChange={(e) => setEditingSigner({ ...editingSigner, status: e.target.value })}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                >
+                                    <option value="Đang hoạt động">Đang hoạt động</option>
+                                    <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button className={styles.cancelBtn} onClick={() => setShowEditSignerModal(false)}>Hủy bỏ</button>
+                            <button className={styles.saveBtn} onClick={handleSaveSignerStatus}>Lưu thay đổi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL THÊM NHÂN VIÊN MỚI (CÓ CẢNH BÁO TRÙNG LẶP) --- */}
+            {showAddEmpModal && (
+                <div className={styles.modalOverlay} style={{ zIndex: 7000 }}>
+                    <div className={styles.addModal} style={{ width: '850px', maxWidth: '95vw', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+
+                        {/* Header */}
+                        <div className={styles.modalHeader} style={{ background: '#0052cc', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', textTransform: 'uppercase', color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                                Tiếp nhận nhân viên mới
+                            </h3>
+                            <button onClick={() => setShowAddEmpModal(false)} style={{ background: 'transparent', border: 'none', color: '#ffffff', fontSize: '24px', cursor: 'pointer', lineHeight: '1', opacity: 0.8 }}>×</button>
+                        </div>
+
+                        <div className={styles.modalBody} style={{ padding: '20px', backgroundColor: '#f5f7fa' }}>
+
+                            {/* 1. KHUNG TÌM KIẾM */}
+                            <div style={{ background: 'white', padding: '15px', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '15px', border: '1px solid #e1e4e8' }}>
+                                <label style={{ fontWeight: '600', color: '#333', fontSize: '14px', whiteSpace: 'nowrap' }}>ID Tài khoản:</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                                    <input
+                                        type="text"
+                                        style={{ width: '550px', padding: '8px 12px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px', outline: 'none' }}
+                                        placeholder="Nhập ID (VD: USER01)..."
+                                        value={searchUserId}
+                                        onChange={(e) => setSearchUserId(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
+                                        autoFocus
+                                    />
+                                    <button
+                                        onClick={handleSearchUser}
+                                        style={{ background: '#0052cc', color: 'white', border: 'none', padding: '8px 25px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', whiteSpace: 'nowrap' }}
+                                    >
+                                        Kiểm tra
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 2. KẾT QUẢ TÌM KIẾM */}
+                            {foundUser && (
+                                <div className={styles.fadeIn}>
+
+                                    {/* --- CẢNH BÁO TRÙNG LẶP (NẾU CÓ) --- */}
+                                    {duplicateWarning && (
+                                        <div style={{
+                                            backgroundColor: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322',
+                                            padding: '10px 15px', borderRadius: '6px', marginBottom: '15px',
+                                            display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', fontSize: '14px'
+                                        }}>
+                                            <span>⚠️</span> {duplicateWarning}
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '15px', opacity: duplicateWarning ? 0.6 : 1, pointerEvents: duplicateWarning ? 'none' : 'auto' }}>
+
+                                        {/* CỘT 1: THÔNG TIN CÁ NHÂN */}
+                                        <div style={{ background: 'white', padding: '20px', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e1e4e8' }}>
+                                            <h4 style={{ margin: '0 0 20px 0', color: '#333', borderBottom: '1px solid #eee', paddingBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
+                                                👤 Thông tin cá nhân
+                                            </h4>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '20px' }}>
+                                                {/* Sub-col Trái */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                        <span style={{ width: '100px', fontSize: '12px', color: '#888', fontWeight: '600', textTransform: 'uppercase', marginTop: '2px', textAlign: 'left' }}>Họ và tên:</span>
+                                                        <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#0052cc', textTransform: 'uppercase', flex: 1 }}>{foundUser.name}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                        <span style={{ width: '100px', fontSize: '12px', color: '#888', fontWeight: '600', textTransform: 'uppercase', marginTop: '2px', textAlign: 'left' }}>Email:</span>
+                                                        <span style={{ fontSize: '14px', color: '#333', flex: 1, wordBreak: 'break-all' }}>{foundUser.email}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                        <span style={{ width: '100px', fontSize: '12px', color: '#888', fontWeight: '600', textTransform: 'uppercase', marginTop: '2px', textAlign: 'left' }}>SĐT:</span>
+                                                        <span style={{ fontSize: '14px', color: '#333', flex: 1 }}>{foundUser.phone}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Sub-col Phải */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                        <span style={{ width: '90px', fontSize: '12px', color: '#888', fontWeight: '600', textTransform: 'uppercase', marginTop: '2px' }}>Giới tính:</span>
+                                                        <span style={{ fontSize: '14px', color: '#333', flex: 1 }}>{foundUser.gender}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                                                        <span style={{ width: '90px', fontSize: '12px', color: '#888', fontWeight: '600', textTransform: 'uppercase', marginTop: '2px' }}>Ngày sinh:</span>
+                                                        <span style={{ fontSize: '14px', color: '#333', flex: 1 }}>{formatDob(foundUser.dob)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* CỘT 2: PHÂN CÔNG */}
+                                        <div style={{ background: 'white', padding: '15px', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e1e4e8', display: 'flex', flexDirection: 'column' }}>
+                                            <h4 style={{ margin: '0 0 15px 0', color: '#0052cc', borderBottom: '1px solid #eee', paddingBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
+                                                ⚙️ Phân công công tác
+                                            </h4>
+
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <label style={{ fontSize: '12px', fontWeight: '600', marginBottom: '5px', display: 'block', color: '#555' }}>Vai trò / Chức vụ <span style={{ color: 'red' }}>*</span></label>
+                                                <select
+                                                    disabled={!!duplicateWarning}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', fontSize: '13px', outline: 'none', color: '#333' }}
+                                                    value={newEmpDetails.role}
+                                                    onChange={(e) => setNewEmpDetails({ ...newEmpDetails, role: e.target.value })}
+                                                >
+                                                    <option value="Bác sĩ">Bác sĩ</option>
+                                                    <option value="Y tá">Y tá</option>
+                                                    <option value="Điều dưỡng">Điều dưỡng</option>
+                                                    <option value="Trưởng khoa">Trưởng khoa</option>
+                                                    <option value="Phó khoa">Phó khoa</option>
+                                                    <option value="Kỹ thuật viên">Kỹ thuật viên</option>
+                                                    <option value="Kế toán">Kế toán</option>
+                                                    <option value="Nhân viên">Nhân viên hành chính</option>
+                                                </select>
+                                            </div>
+
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <label style={{ fontSize: '12px', fontWeight: '600', marginBottom: '5px', display: 'block', color: '#555' }}>Khoa / Phòng ban <span style={{ color: 'red' }}>*</span></label>
+                                                <select
+                                                    disabled={!!duplicateWarning}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', fontSize: '13px', outline: 'none', color: '#333' }}
+                                                    value={newEmpDetails.dept}
+                                                    onChange={(e) => setNewEmpDetails({ ...newEmpDetails, dept: e.target.value })}
+                                                >
+                                                    <option value="">-- Chọn Đơn vị --</option>
+                                                    <option value="Khoa Nội">Khoa Nội</option>
+                                                    <option value="Khoa Ngoại">Khoa Ngoại</option>
+                                                    <option value="Khoa Sản">Khoa Sản</option>
+                                                    <option value="Khoa Nhi">Khoa Nhi</option>
+                                                    <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
+                                                    <option value="Phòng Xét Nghiệm">Phòng Xét Nghiệm</option>
+                                                    <option value="Phòng X-Quang">Phòng X-Quang</option>
+                                                    <option value="Phòng Tài chính">Phòng Tài chính</option>
+                                                    <option value="Phòng Hành chính">Phòng Hành chính</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                        <div className={styles.modalFooter} style={{ padding: '12px 20px', background: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                                onClick={() => setShowAddEmpModal(false)}
+                                style={{ padding: '8px 25px', borderRadius: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', fontWeight: '500', color: '#555', fontSize: '13px' }}
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button
+                                onClick={handleAddEmployeeToSystem}
+                                disabled={!foundUser || !newEmpDetails.dept || !!duplicateWarning} // Disable nếu trùng
+                                style={{
+                                    padding: '8px 25px', borderRadius: '4px', border: 'none',
+                                    background: (!foundUser || !newEmpDetails.dept || duplicateWarning) ? '#ccc' : '#0052cc',
+                                    color: 'white', fontWeight: '600',
+                                    cursor: (!foundUser || !newEmpDetails.dept || duplicateWarning) ? 'not-allowed' : 'pointer',
+                                    fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px'
+                                }}
+                            >
+                                <span>✔</span> Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL SỬA NHÂN VIÊN (CHỈ HIỆN VAI TRÒ - KHOA - TRẠNG THÁI) --- */}
+            {showEditEmpModal && editingEmp && (
+                <div className={styles.modalOverlay} style={{ zIndex: 8000 }}>
+                    <div className={styles.addModal} style={{ width: '450px', borderRadius: '8px', overflow:'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>
+                        
+                        <div className={styles.modalHeader} style={{ background: '#0052cc', color: 'white', padding: '15px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', textTransform: 'uppercase', color:'white' }}>Cập nhật nhân viên</h3>
+                            <button onClick={() => setShowEditEmpModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '24px', cursor: 'pointer' }}>×</button>
+                        </div>
+
+                        <div className={styles.modalBody} style={{ padding: '25px' }}>
+                            
+                            {/* Tiêu đề tên nhân viên (Để biết đang sửa ai) */}
+                            <div style={{ textAlign: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
+                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '5px',textAlign:'left' }}>Đang chỉnh sửa cho:</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0052cc', textTransform: 'uppercase', textAlign:'left' }}>{editingEmp.name}</div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                
+                                {/* 1. Sửa Vai trò */}
+                                <div>
+                                    <label style={{ fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '8px', color: '#333', textAlign:'left' }}>Vai trò / Chức vụ:</label>
+                                    <select 
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }}
+                                        value={editingEmp.role}
+                                        onChange={(e) => setEditingEmp({...editingEmp, role: e.target.value})}
+                                    >
+                                        <option value="Bác sĩ">Bác sĩ</option>
+                                        <option value="Y tá">Y tá</option>
+                                        <option value="Điều dưỡng">Điều dưỡng</option>
+                                        <option value="Trưởng khoa">Trưởng khoa</option>
+                                        <option value="Phó khoa">Phó khoa</option>
+                                        <option value="Kỹ thuật viên">Kỹ thuật viên</option>
+                                        <option value="Kế toán">Kế toán</option>
+                                        <option value="Nhân viên">Nhân viên hành chính</option>
+                                    </select>
+                                </div>
+
+                                {/* 2. Sửa Khoa */}
+                                <div>
+                                    <label style={{ fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '8px', color: '#333', textAlign:'left' }}>Khoa / Phòng ban:</label>
+                                    <select 
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }}
+                                        value={editingEmp.dept}
+                                        onChange={(e) => setEditingEmp({...editingEmp, dept: e.target.value})}
+                                    >
+                                        <option value="Khoa Nội">Khoa Nội</option>
+                                        <option value="Khoa Ngoại">Khoa Ngoại</option>
+                                        <option value="Khoa Sản">Khoa Sản</option>
+                                        <option value="Khoa Nhi">Khoa Nhi</option>
+                                        <option value="Khoa Cấp Cứu">Khoa Cấp Cứu</option>
+                                        <option value="Phòng Xét Nghiệm">Phòng Xét Nghiệm</option>
+                                        <option value="Phòng X-Quang">Phòng X-Quang</option>
+                                        <option value="Phòng Tài chính">Phòng Tài chính</option>
+                                        <option value="Phòng Hành chính">Phòng Hành chính</option>
+                                    </select>
+                                </div>
+
+                                {/* 3. Sửa Trạng thái */}
+                                <div>
+                                    <label style={{ fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '8px', color: '#333', textAlign:'left' }}>Trạng thái hoạt động:</label>
+                                    <select 
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', outline: 'none' }}
+                                        value={editingEmp.status}
+                                        onChange={(e) => setEditingEmp({...editingEmp, status: e.target.value})}
+                                    >
+                                        <option value="Đang hoạt động">Đang hoạt động</option>
+                                        <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div className={styles.modalFooter} style={{ padding: '15px 25px', background: 'white', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button 
+                                onClick={() => setShowEditEmpModal(false)}
+                                style={{ padding: '8px 25px', borderRadius: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', color: '#555', fontWeight:'500' }}
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button 
+                                onClick={handleSaveEmpChanges}
+                                style={{ padding: '8px 25px', borderRadius: '4px', border: 'none', background: '#0052cc', color: 'white', fontWeight: 'bold', cursor: 'pointer', display:'flex', alignItems:'center', gap:'5px' }}
+                            >
                                 <span>💾</span> Lưu thay đổi
                             </button>
                         </div>
