@@ -1,0 +1,303 @@
+/* --- Variables & Mixins --- */
+$primary-blue: #0052cc;
+$light-blue: #e6f0ff;
+$medium-blue: #3d7cc7;
+$dark-blue: #002e5c;
+$white: #ffffff;
+$light-gray: #f5f8fb;
+$border-gray: #e0e8f0;
+$text-dark: #1a2340;
+$text-light: #5a6b7d;
+$success-color: #22863a;
+$warning-color: #ff6b6b;
+
+@mixin box-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+// Hiệu ứng Hover Lift + Bóng đậm
+@mixin hover-lift {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(5, 82, 204, 0.25) !important; 
+  }
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(5, 82, 204, 0.2) !important;
+  }
+}
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- Layout Chính (Xếp dọc để chứa nút Back) --- */
+.container {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 40px; min-height: 100vh;
+  background: linear-gradient(135deg, $light-blue 0%, #f0f7ff 100%);
+  font-family: 'Segoe UI', sans-serif;
+  animation: slideUp 0.5s ease;
+  @media (max-width: 768px) { padding: 20px; }
+}
+
+/* Nút Quay lại */
+.backBtn {
+  align-self: flex-start;
+  background: transparent; border: none;
+  color: $text-light; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 8px 0; border-radius: 8px;
+  transition: all 0.3s ease;
+
+  .arrowIcon { font-size: 20px; transition: transform 0.3s ease; }
+  &:hover {
+    color: $primary-blue;
+    .arrowIcon { transform: translateX(-4px); }
+  }
+}
+
+/* Wrapper cho 2 cột */
+.profileLayout {
+  display: flex; gap: 24px; flex: 1;
+  @media (max-width: 768px) { flex-direction: column; }
+}
+
+/* --- Left Column --- */
+.leftColumn {
+  width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px;
+  @media (max-width: 768px) { width: 100%; }
+}
+
+.profileCard {
+  background: $white; padding: 32px 20px; border-radius: 16px; text-align: center;
+  @include box-shadow; @include hover-lift;
+  position: relative; overflow: hidden;
+  // Bóng nền mặc định
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  &::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 80px;
+    background: linear-gradient(135deg, $primary-blue, $medium-blue); z-index: 0;
+  }
+
+  .avatarSection {
+    position: relative; width: 90px; height: 90px; margin: 0 auto 16px; z-index: 1;
+    .avatar {
+      width: 100%; height: 100%; border-radius: 50%; background: $white;
+      color: $primary-blue; font-size: 36px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      border: 4px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 20px rgba(0, 82, 204, 0.15);
+    }
+    .onlineBadge {
+      position: absolute; bottom: 5px; right: 5px; width: 16px; height: 16px;
+      background: #2ecc71; border: 3px solid $white; border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  }
+  .userName { position: relative; z-index: 1; font-size: 20px; font-weight: 800; color: $text-dark; margin: 0 0 4px; }
+  .userRole { position: relative; z-index: 1; font-size: 14px; color: $text-light; margin: 0 0 16px; font-weight: 500; }
+  .infoBadge {
+    position: relative; z-index: 1; display: inline-block; padding: 6px 14px;
+    background: $light-blue; color: $primary-blue; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+  }
+}
+
+.menuNav {
+  background: $white; border-radius: 16px; overflow: hidden;
+  @include box-shadow; padding: 8px;
+}
+
+.menuItem {
+  width: 100%; padding: 14px 20px; text-align: left;
+  background: transparent; border: none; border-radius: 12px;
+  cursor: pointer; font-size: 14px; color: $text-light; font-weight: 600;
+  transition: all 0.3s ease; margin-bottom: 4px;
+
+  &:hover { background: $light-gray; color: $primary-blue; transform: translateX(4px); }
+  &.active {
+    background: linear-gradient(90deg, $light-blue, $white);
+    color: $primary-blue; font-weight: 800;
+    box-shadow: -3px 0 0 0 $primary-blue;
+  }
+}
+
+/* --- Right Column --- */
+.rightColumn { flex: 1; animation: slideUp 0.5s ease 0.1s both; }
+
+.contentCard {
+  background: $white; padding: 32px; border-radius: 16px;
+  @include box-shadow; min-height: 400px;
+}
+
+.cardTitle {
+  font-size: 22px; font-weight: 800; color: $text-dark; margin: 0 0 24px;
+  padding-bottom: 16px; border-bottom: 2px solid $light-gray;
+}
+
+/* --- Forms --- */
+.formGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.formGroup {
+  display: flex; flex-direction: column; gap: 8px;
+  label { font-size: 13px; font-weight: 700; color: $text-light; text-transform: uppercase; letter-spacing: 0.5px; }
+  input {
+    padding: 12px 16px; border: 2px solid $border-gray; border-radius: 12px;
+    font-size: 14px; color: $text-dark; font-weight: 500; transition: all 0.3s; background: $white;
+    &:focus { outline: none; border-color: $primary-blue; box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.1); }
+    &.readOnly { background: $light-gray; color: #888; border-color: transparent; cursor: not-allowed; }
+  }
+}
+
+.cardFooter { margin-top: 32px; display: flex; justify-content: flex-end; }
+
+// Nút Lưu thay đổi (Có bóng)
+.saveBtn {
+  background: linear-gradient(135deg, $primary-blue, $medium-blue);
+  color: $white; border: none; padding: 12px 32px; border-radius: 12px;
+  font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+  @include hover-lift;
+}
+
+/* --- Security Tab --- */
+.securitySection { margin-bottom: 32px; }
+.secHeader {
+  margin-bottom: 16px;
+  h4 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+  p { margin: 0; font-size: 13px; color: $text-light; }
+}
+
+.passwordGrid {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  input {
+    flex: 1; min-width: 200px; padding: 12px 16px;
+    border: 2px solid $border-gray; border-radius: 12px;
+    &:focus { border-color: $primary-blue; outline: none; }
+  }
+  .changePassBtn {
+    background: $success-color; color: $white; border: none;
+    padding: 12px 24px; border-radius: 12px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(34, 134, 58, 0.2);
+    @include hover-lift;
+    &:hover { box-shadow: 0 12px 28px rgba(34, 134, 58, 0.25) !important; }
+  }
+}
+
+.divider { height: 1px; background: $border-gray; margin: 32px 0; }
+
+.securityRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px; background: $light-gray; border-radius: 12px; margin-bottom: 16px;
+  h4 { margin: 0 0 4px; font-size: 16px; font-weight: 700; color: $text-dark; }
+  p { margin: 0; color: $text-light; font-size: 13px; }
+  .highlightText { color: $warning-color; font-weight: 600; margin-top: 4px; }
+  .statusOn { color: $success-color; font-weight: 700; font-size: 13px; margin-top: 4px; display: block; }
+  .statusOff { color: $text-light; font-weight: 700; font-size: 13px; margin-top: 4px; display: block; }
+}
+
+.enableBtn {
+  background: $primary-blue; color: $white; border: none;
+  padding: 10px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+  @include hover-lift;
+}
+
+.disableBtn {
+  background: $white; color: $warning-color; border: 1px solid $warning-color;
+  padding: 10px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.1);
+  @include hover-lift;
+  &:hover { background: #fff5f5; box-shadow: 0 8px 16px rgba(255, 107, 107, 0.2) !important; }
+}
+
+.logoutOtherBtn {
+  background: $white; border: 1px solid $warning-color; color: $warning-color;
+  padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer;
+  @include hover-lift;
+  &:hover { background: $warning-color; color: $white; }
+}
+
+/* --- Logs Tab --- */
+.logList { display: flex; flex-direction: column; gap: 16px; }
+.logItem {
+  display: flex; align-items: center; gap: 20px; padding: 20px;
+  background: $white; border-radius: 14px; border-left: 5px solid $primary-blue;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s;
+  &:hover { transform: translateX(6px); background: #fcfdff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  &.warning { border-left-color: $warning-color; background: #fff5f5; .logIcon { background: rgba(255, 107, 107, 0.1); } }
+}
+.logIcon {
+  width: 44px; height: 44px; border-radius: 12px; background: $light-blue;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.logContent {
+  flex: 1;
+  .logAction { margin: 0 0 6px; font-weight: 700; color: $text-dark; font-size: 15px; }
+  .logTime { font-size: 12px; color: $text-light; font-weight: 500; display: flex; align-items: center; gap: 4px; &::before { content: '🕒'; font-size: 10px; } }
+}
+
+/* --- MODAL QR CODE --- */
+.modalOverlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modalContent {
+  background: $white; width: 420px; max-width: 90%;
+  border-radius: 20px; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 24px; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.modalHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  h3 { margin: 0; font-size: 18px; color: $text-dark; font-weight: 800; }
+  .closeIcon {
+    background: none; border: none; font-size: 20px; color: $text-light;
+    cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s;
+    &:hover { background: $light-gray; color: $warning-color; }
+  }
+}
+
+.modalBody {
+  text-align: center;
+  .stepText { text-align: left; font-size: 14px; color: $text-light; margin: 8px 0; b { color: $text-dark; } }
+}
+
+.qrContainer {
+  background: $light-gray; padding: 16px; border-radius: 12px;
+  display: inline-block; margin: 16px 0; border: 2px dashed $border-gray;
+  img { width: 180px; height: 180px; display: block; mix-blend-mode: multiply; }
+}
+
+/* ĐÃ SỬA: Box-sizing và margin-bottom để không tràn lề */
+.otpInput {
+  width: 100%; box-sizing: border-box; 
+  padding: 16px; text-align: center; font-size: 24px; letter-spacing: 8px;
+  font-weight: 700; color: $primary-blue; border: 2px solid $border-gray;
+  border-radius: 12px; transition: all 0.3s; margin-bottom: 24px;
+  &:focus { border-color: $primary-blue; box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.1); outline: none; }
+  &::placeholder { color: #ddd; letter-spacing: 2px; font-size: 18px; }
+}
+
+.modalFooter {
+  display: flex; gap: 12px; margin-top: 8px;
+  button { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 14px; }
+  .cancelBtn { background: $light-gray; color: $text-light; &:hover { background: #eee; } }
+  .confirmBtn {
+    background: $primary-blue; color: $white;
+    box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+    @include hover-lift;
+  }
+}

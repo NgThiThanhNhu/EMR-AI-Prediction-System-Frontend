@@ -239,6 +239,7 @@ $accent-blue: #00b8d9;
 
     .gradientText {
       background: linear-gradient(90deg, $primary, $accent-blue);
+      background-clip: text;  
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
